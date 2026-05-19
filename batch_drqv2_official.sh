@@ -94,14 +94,11 @@ run_si2e() {
 
     print_info_table "$task" "$method" "$seed" "$dir" "$pid" "$logfile"
 
-    wait "$pid"
-    local exit_code=$?
-
-    if [[ $exit_code -eq 0 ]]; then
+    if wait "$pid"; then
         local final_er; final_er=$(tail -1 "$dir/eval.csv" 2>/dev/null | awk -F',' '{printf "%.1f",$3}')
         log "DONE:  $task / $method / seed=$seed  ER=$final_er  →  $dir"
     else
-        log "FAILED (exit=$exit_code): $task / $method / seed=$seed"
+        log "FAILED (exit=$?): $task / $method / seed=$seed"
     fi
 }
 
@@ -131,14 +128,11 @@ run_vcse() {
 
     print_info_table "$task" "vcse" "$seed" "$dir" "$pid" "$logfile"
 
-    wait "$pid"
-    local exit_code=$?
-
-    if [[ $exit_code -eq 0 ]]; then
+    if wait "$pid"; then
         local final_er; final_er=$(tail -1 "$dir/eval.csv" 2>/dev/null | awk -F',' '{printf "%.1f",$3}')
         log "DONE:  $task / VCSE / seed=$seed  ER=$final_er  →  $dir"
     else
-        log "FAILED (exit=$exit_code): $task / VCSE / seed=$seed"
+        log "FAILED (exit=$?): $task / VCSE / seed=$seed"
     fi
 }
 

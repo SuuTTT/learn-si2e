@@ -34,8 +34,11 @@ run_si2e() {
 
     dir="$RESULTS/${task}_${tag}_seed${seed}"
     if [[ -f "$dir/eval.csv" ]]; then
-        log "SKIP (exists): $dir"
-        return 0
+        local last_f; last_f=$(tail -1 "$dir/eval.csv" 2>/dev/null | awk -F',' '{print $4}')
+        if [[ "${last_f:-0}" -ge 239000 ]]; then
+            log "SKIP (complete): $dir"
+            return 0
+        fi
     fi
 
     mkdir -p "$dir"
@@ -46,7 +49,8 @@ run_si2e() {
         ${agent_do_vcse} \
         "task@_global_=${task}" \
         seed="$seed" num_train_frames=250000 device=cuda:0 \
-        hydra.run.dir="$dir" 2>&1 | tee -a "$dir/stdout.log" | tail -1
+        hydra.run.dir="$dir" 2>&1 | tee -a "$dir/stdout.log" | tail -1 \
+        || { log "FAILED: $task / $method / seed=$seed"; return 0; }
     log "DONE:  $task / $method / seed=$seed  →  final eval: $(tail -1 $dir/eval.csv)"
 }
 
@@ -55,8 +59,11 @@ run_vcse() {
     local dir="$RESULTS/${task}_vcse_seed${seed}"
 
     if [[ -f "$dir/eval.csv" ]]; then
-        log "SKIP (exists): $dir"
-        return 0
+        local last_f; last_f=$(tail -1 "$dir/eval.csv" 2>/dev/null | awk -F',' '{print $4}')
+        if [[ "${last_f:-0}" -ge 239000 ]]; then
+            log "SKIP (complete): $dir"
+            return 0
+        fi
     fi
 
     mkdir -p "$dir"
@@ -66,7 +73,8 @@ run_vcse() {
         agent.do_vcse=true \
         "task@_global_=${task}" \
         seed="$seed" num_train_frames=250000 device=cuda:0 \
-        hydra.run.dir="$dir" 2>&1 | tee -a "$dir/stdout.log" | tail -1
+        hydra.run.dir="$dir" 2>&1 | tee -a "$dir/stdout.log" | tail -1 \
+        || { log "FAILED: $task / VCSE / seed=$seed"; return 0; }
     log "DONE:  $task / VCSE / seed=$seed  →  final eval: $(tail -1 $dir/eval.csv)"
 }
 

@@ -21,3 +21,9 @@ nohup: ignoring input
 | train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 0.3524 | BS: 124500 | FPS: 95.7674 | T: 0:51:14
 [12:02:06] DONE:  quadruped_walk / se / seed=1  →  final eval: 240.0,1000.0,270.6118827133209,240000,120000.0,2961.6381900310516
 [12:02:06] START: pendulum_swingup / baseline / seed=1  →  /workspace/learn-si2e/results/drqv2-full/pendulum_swingup_baseline_seed1
+| train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 887.0000 | BS: 124500 | FPS: 137.1939 | T: 0:36:46
+[12:39:06] DONE:  pendulum_swingup / baseline / seed=1  →  final eval: 240.0,1000.0,835.5,240000,120000.0,2124.616537809372
+[12:39:06] START: pendulum_swingup / se / seed=1  →  /workspace/learn-si2e/results/drqv2-full/pendulum_swingup_se_seed1
+| train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 0.0000 | BS: 124500 | FPS: 96.6533 | T: 1:27:49
+[14:07:11] DONE:  pendulum_swingup / se / seed=1  →  final eval: 240.0,1000.0,11.3,240000,120000.0,5159.995046615601
+[14:07:11] START: cartpole_balance / baseline / seed=1  →  /workspace/learn-si2e/results/drqv2-full/cartpole_balance_baseline_seed1

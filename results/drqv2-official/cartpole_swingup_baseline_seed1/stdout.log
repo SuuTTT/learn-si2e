@@ -1,0 +1,283 @@
+/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py:210: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path='cfgs', config_name='config')
+/usr/local/lib/python3.10/dist-packages/hydra/_internal/hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+  ret = run_job(
+/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py:210: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path='cfgs', config_name='config')
+workspace: /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_baseline_seed1
+| eval           | F: 0 | S: 0 | E: 0 | L: 1000 | R: 9.3777 | T: 0:00:00
+| train          | F: 5000 | S: 2500 | E: 5 | L: 1000 | R: 73.8506 | BS: 2500 | FPS: 21.1863 | T: 0:00:47
+| train          | F: 6000 | S: 3000 | E: 6 | L: 1000 | R: 73.6080 | BS: 3000 | FPS: 93.1401 | T: 0:00:57
+| train          | F: 7000 | S: 3500 | E: 7 | L: 1000 | R: 70.1054 | BS: 3500 | FPS: 94.2265 | T: 0:01:08
+| train          | F: 8000 | S: 4000 | E: 8 | L: 1000 | R: 71.8444 | BS: 4000 | FPS: 91.4687 | T: 0:01:19
+| train          | F: 9000 | S: 4500 | E: 9 | L: 1000 | R: 71.3766 | BS: 4500 | FPS: 92.3957 | T: 0:01:30
+| train          | F: 10000 | S: 5000 | E: 10 | L: 1000 | R: 73.7625 | BS: 5000 | FPS: 98.2435 | T: 0:01:40
+| eval           | F: 10000 | S: 5000 | E: 10 | L: 1000 | R: 74.8325 | T: 0:01:40
+| train          | F: 11000 | S: 5500 | E: 11 | L: 1000 | R: 72.0124 | BS: 5500 | FPS: 29.3551 | T: 0:02:14
+| train          | F: 12000 | S: 6000 | E: 12 | L: 1000 | R: 73.5865 | BS: 6000 | FPS: 94.4207 | T: 0:02:25
+| train          | F: 13000 | S: 6500 | E: 13 | L: 1000 | R: 71.7362 | BS: 6500 | FPS: 93.9961 | T: 0:02:35
+| train          | F: 14000 | S: 7000 | E: 14 | L: 1000 | R: 72.5846 | BS: 7000 | FPS: 96.0072 | T: 0:02:46
+| train          | F: 15000 | S: 7500 | E: 15 | L: 1000 | R: 71.4812 | BS: 7500 | FPS: 93.8851 | T: 0:02:56
+| train          | F: 16000 | S: 8000 | E: 16 | L: 1000 | R: 74.6866 | BS: 8000 | FPS: 93.6535 | T: 0:03:07
+| train          | F: 17000 | S: 8500 | E: 17 | L: 1000 | R: 73.2393 | BS: 8500 | FPS: 89.3614 | T: 0:03:18
+| train          | F: 18000 | S: 9000 | E: 18 | L: 1000 | R: 70.4914 | BS: 9000 | FPS: 93.5711 | T: 0:03:29
+| train          | F: 19000 | S: 9500 | E: 19 | L: 1000 | R: 71.8180 | BS: 9500 | FPS: 93.0433 | T: 0:03:40
+| train          | F: 20000 | S: 10000 | E: 20 | L: 1000 | R: 72.9947 | BS: 10000 | FPS: 94.0569 | T: 0:03:50
+| eval           | F: 20000 | S: 10000 | E: 20 | L: 1000 | R: 75.0211 | T: 0:03:50
+| train          | F: 21000 | S: 10500 | E: 21 | L: 1000 | R: 72.1809 | BS: 10500 | FPS: 29.4742 | T: 0:04:24
+| train          | F: 22000 | S: 11000 | E: 22 | L: 1000 | R: 152.9839 | BS: 11000 | FPS: 108.0394 | T: 0:04:33
+| train          | F: 23000 | S: 11500 | E: 23 | L: 1000 | R: 165.5284 | BS: 11500 | FPS: 115.9480 | T: 0:04:42
+| train          | F: 24000 | S: 12000 | E: 24 | L: 1000 | R: 177.3868 | BS: 12000 | FPS: 114.7806 | T: 0:04:51
+| train          | F: 25000 | S: 12500 | E: 25 | L: 1000 | R: 212.2025 | BS: 12500 | FPS: 98.5315 | T: 0:05:01
+| train          | F: 26000 | S: 13000 | E: 26 | L: 1000 | R: 212.1634 | BS: 13000 | FPS: 91.7436 | T: 0:05:12
+| train          | F: 27000 | S: 13500 | E: 27 | L: 1000 | R: 153.6764 | BS: 13500 | FPS: 90.6134 | T: 0:05:23
+| train          | F: 28000 | S: 14000 | E: 28 | L: 1000 | R: 142.6262 | BS: 14000 | FPS: 93.4124 | T: 0:05:34
+| train          | F: 29000 | S: 14500 | E: 29 | L: 1000 | R: 146.5145 | BS: 14500 | FPS: 94.3976 | T: 0:05:44
+| train          | F: 30000 | S: 15000 | E: 30 | L: 1000 | R: 138.5627 | BS: 15000 | FPS: 92.9539 | T: 0:05:55
+| eval           | F: 30000 | S: 15000 | E: 30 | L: 1000 | R: 136.5823 | T: 0:05:55
+| train          | F: 31000 | S: 15500 | E: 31 | L: 1000 | R: 244.1059 | BS: 15500 | FPS: 29.5023 | T: 0:06:29
+| train          | F: 32000 | S: 16000 | E: 32 | L: 1000 | R: 157.5695 | BS: 16000 | FPS: 92.8662 | T: 0:06:40
+| train          | F: 33000 | S: 16500 | E: 33 | L: 1000 | R: 164.0987 | BS: 16500 | FPS: 90.3012 | T: 0:06:51
+| train          | F: 34000 | S: 17000 | E: 34 | L: 1000 | R: 189.6421 | BS: 17000 | FPS: 89.8389 | T: 0:07:02
+| train          | F: 35000 | S: 17500 | E: 35 | L: 1000 | R: 174.6066 | BS: 17500 | FPS: 94.0481 | T: 0:07:12
+| train          | F: 36000 | S: 18000 | E: 36 | L: 1000 | R: 172.7179 | BS: 18000 | FPS: 93.1595 | T: 0:07:23
+| train          | F: 37000 | S: 18500 | E: 37 | L: 1000 | R: 147.8747 | BS: 18500 | FPS: 115.1087 | T: 0:07:32
+| train          | F: 38000 | S: 19000 | E: 38 | L: 1000 | R: 165.6763 | BS: 19000 | FPS: 116.2964 | T: 0:07:40
+| train          | F: 39000 | S: 19500 | E: 39 | L: 1000 | R: 155.6821 | BS: 19500 | FPS: 119.5005 | T: 0:07:49
+| train          | F: 40000 | S: 20000 | E: 40 | L: 1000 | R: 177.8737 | BS: 20000 | FPS: 95.1017 | T: 0:07:59
+| eval           | F: 40000 | S: 20000 | E: 40 | L: 1000 | R: 162.6519 | T: 0:07:59
+| train          | F: 41000 | S: 20500 | E: 41 | L: 1000 | R: 178.8296 | BS: 20500 | FPS: 27.6927 | T: 0:08:35
+| train          | F: 42000 | S: 21000 | E: 42 | L: 1000 | R: 197.1025 | BS: 21000 | FPS: 94.5056 | T: 0:08:46
+| train          | F: 43000 | S: 21500 | E: 43 | L: 1000 | R: 189.2939 | BS: 21500 | FPS: 94.5096 | T: 0:08:57
+| train          | F: 44000 | S: 22000 | E: 44 | L: 1000 | R: 191.5323 | BS: 22000 | FPS: 92.7234 | T: 0:09:07
+| train          | F: 45000 | S: 22500 | E: 45 | L: 1000 | R: 233.1669 | BS: 22500 | FPS: 91.1098 | T: 0:09:18
+| train          | F: 46000 | S: 23000 | E: 46 | L: 1000 | R: 176.3636 | BS: 23000 | FPS: 91.6978 | T: 0:09:29
+| train          | F: 47000 | S: 23500 | E: 47 | L: 1000 | R: 178.0224 | BS: 23500 | FPS: 95.5721 | T: 0:09:40
+| train          | F: 48000 | S: 24000 | E: 48 | L: 1000 | R: 169.9284 | BS: 24000 | FPS: 94.7053 | T: 0:09:50
+| train          | F: 49000 | S: 24500 | E: 49 | L: 1000 | R: 219.7151 | BS: 24500 | FPS: 91.5976 | T: 0:10:01
+| train          | F: 50000 | S: 25000 | E: 50 | L: 1000 | R: 183.1113 | BS: 25000 | FPS: 90.9998 | T: 0:10:12
+| eval           | F: 50000 | S: 25000 | E: 50 | L: 1000 | R: 168.6878 | T: 0:10:12
+| train          | F: 51000 | S: 25500 | E: 51 | L: 1000 | R: 170.4024 | BS: 25500 | FPS: 30.1639 | T: 0:10:45
+| train          | F: 52000 | S: 26000 | E: 52 | L: 1000 | R: 221.5259 | BS: 26000 | FPS: 93.4478 | T: 0:10:56
+| train          | F: 53000 | S: 26500 | E: 53 | L: 1000 | R: 169.1255 | BS: 26500 | FPS: 93.5167 | T: 0:11:07
+| train          | F: 54000 | S: 27000 | E: 54 | L: 1000 | R: 168.2170 | BS: 27000 | FPS: 93.4082 | T: 0:11:17
+| train          | F: 55000 | S: 27500 | E: 55 | L: 1000 | R: 168.4384 | BS: 27500 | FPS: 94.6051 | T: 0:11:28
+| train          | F: 56000 | S: 28000 | E: 56 | L: 1000 | R: 192.3423 | BS: 28000 | FPS: 94.1607 | T: 0:11:39
+| train          | F: 57000 | S: 28500 | E: 57 | L: 1000 | R: 169.8684 | BS: 28500 | FPS: 91.2370 | T: 0:11:50
+| train          | F: 58000 | S: 29000 | E: 58 | L: 1000 | R: 162.1066 | BS: 29000 | FPS: 91.7314 | T: 0:12:01
+| train          | F: 59000 | S: 29500 | E: 59 | L: 1000 | R: 169.9485 | BS: 29500 | FPS: 92.9968 | T: 0:12:11
+| train          | F: 60000 | S: 30000 | E: 60 | L: 1000 | R: 178.7100 | BS: 30000 | FPS: 90.3306 | T: 0:12:22
+| eval           | F: 60000 | S: 30000 | E: 60 | L: 1000 | R: 166.9577 | T: 0:12:22
+| train          | F: 61000 | S: 30500 | E: 61 | L: 1000 | R: 159.7537 | BS: 30500 | FPS: 29.0844 | T: 0:12:57
+| train          | F: 62000 | S: 31000 | E: 62 | L: 1000 | R: 200.9891 | BS: 31000 | FPS: 93.2538 | T: 0:13:07
+| train          | F: 63000 | S: 31500 | E: 63 | L: 1000 | R: 213.2876 | BS: 31500 | FPS: 91.7565 | T: 0:13:18
+| train          | F: 64000 | S: 32000 | E: 64 | L: 1000 | R: 206.9652 | BS: 32000 | FPS: 108.1982 | T: 0:13:28
+| train          | F: 65000 | S: 32500 | E: 65 | L: 1000 | R: 172.1630 | BS: 32500 | FPS: 114.6018 | T: 0:13:36
+| train          | F: 66000 | S: 33000 | E: 66 | L: 1000 | R: 167.3603 | BS: 33000 | FPS: 111.0010 | T: 0:13:45
+| train          | F: 67000 | S: 33500 | E: 67 | L: 1000 | R: 226.6717 | BS: 33500 | FPS: 91.5209 | T: 0:13:56
+| train          | F: 68000 | S: 34000 | E: 68 | L: 1000 | R: 168.9905 | BS: 34000 | FPS: 92.0333 | T: 0:14:07
+| train          | F: 69000 | S: 34500 | E: 69 | L: 1000 | R: 225.9695 | BS: 34500 | FPS: 93.5244 | T: 0:14:18
+| train          | F: 70000 | S: 35000 | E: 70 | L: 1000 | R: 175.1274 | BS: 35000 | FPS: 92.6426 | T: 0:14:29
+| eval           | F: 70000 | S: 35000 | E: 70 | L: 1000 | R: 161.0162 | T: 0:14:29
+| train          | F: 71000 | S: 35500 | E: 71 | L: 1000 | R: 179.2484 | BS: 35500 | FPS: 28.3691 | T: 0:15:04
+| train          | F: 72000 | S: 36000 | E: 72 | L: 1000 | R: 197.3355 | BS: 36000 | FPS: 93.5741 | T: 0:15:15
+| train          | F: 73000 | S: 36500 | E: 73 | L: 1000 | R: 234.3334 | BS: 36500 | FPS: 91.9117 | T: 0:15:25
+| train          | F: 74000 | S: 37000 | E: 74 | L: 1000 | R: 232.2882 | BS: 37000 | FPS: 93.3137 | T: 0:15:36
+| train          | F: 75000 | S: 37500 | E: 75 | L: 1000 | R: 233.8778 | BS: 37500 | FPS: 91.8868 | T: 0:15:47
+| train          | F: 76000 | S: 38000 | E: 76 | L: 1000 | R: 209.2867 | BS: 38000 | FPS: 90.6440 | T: 0:15:58
+| train          | F: 77000 | S: 38500 | E: 77 | L: 1000 | R: 172.1486 | BS: 38500 | FPS: 95.3411 | T: 0:16:09
+| train          | F: 78000 | S: 39000 | E: 78 | L: 1000 | R: 179.7514 | BS: 39000 | FPS: 93.4985 | T: 0:16:19
+| train          | F: 79000 | S: 39500 | E: 79 | L: 1000 | R: 266.2882 | BS: 39500 | FPS: 109.7386 | T: 0:16:28
+| train          | F: 80000 | S: 40000 | E: 80 | L: 1000 | R: 201.2898 | BS: 40000 | FPS: 114.2007 | T: 0:16:37
+| eval           | F: 80000 | S: 40000 | E: 80 | L: 1000 | R: 157.9952 | T: 0:16:37
+| train          | F: 81000 | S: 40500 | E: 81 | L: 1000 | R: 184.4888 | BS: 40500 | FPS: 30.3595 | T: 0:17:10
+| train          | F: 82000 | S: 41000 | E: 82 | L: 1000 | R: 165.8165 | BS: 41000 | FPS: 89.9911 | T: 0:17:21
+| train          | F: 83000 | S: 41500 | E: 83 | L: 1000 | R: 184.9620 | BS: 41500 | FPS: 91.9884 | T: 0:17:32
+| train          | F: 84000 | S: 42000 | E: 84 | L: 1000 | R: 161.7494 | BS: 42000 | FPS: 93.3991 | T: 0:17:43
+| train          | F: 85000 | S: 42500 | E: 85 | L: 1000 | R: 168.5312 | BS: 42500 | FPS: 93.9943 | T: 0:17:53
+| train          | F: 86000 | S: 43000 | E: 86 | L: 1000 | R: 167.1475 | BS: 43000 | FPS: 88.9456 | T: 0:18:05
+| train          | F: 87000 | S: 43500 | E: 87 | L: 1000 | R: 184.0773 | BS: 43500 | FPS: 90.6760 | T: 0:18:16
+| train          | F: 88000 | S: 44000 | E: 88 | L: 1000 | R: 167.1894 | BS: 44000 | FPS: 93.7642 | T: 0:18:26
+| train          | F: 89000 | S: 44500 | E: 89 | L: 1000 | R: 177.0119 | BS: 44500 | FPS: 92.4096 | T: 0:18:37
+| train          | F: 90000 | S: 45000 | E: 90 | L: 1000 | R: 216.5405 | BS: 45000 | FPS: 95.0681 | T: 0:18:48
+| eval           | F: 90000 | S: 45000 | E: 90 | L: 1000 | R: 189.4586 | T: 0:18:48
+| train          | F: 91000 | S: 45500 | E: 91 | L: 1000 | R: 201.4057 | BS: 45500 | FPS: 30.1328 | T: 0:19:21
+| train          | F: 92000 | S: 46000 | E: 92 | L: 1000 | R: 177.3448 | BS: 46000 | FPS: 112.6426 | T: 0:19:30
+| train          | F: 93000 | S: 46500 | E: 93 | L: 1000 | R: 190.0951 | BS: 46500 | FPS: 113.2888 | T: 0:19:39
+| train          | F: 94000 | S: 47000 | E: 94 | L: 1000 | R: 162.5931 | BS: 47000 | FPS: 95.3633 | T: 0:19:49
+| train          | F: 95000 | S: 47500 | E: 95 | L: 1000 | R: 201.8902 | BS: 47500 | FPS: 93.6644 | T: 0:20:00
+| train          | F: 96000 | S: 48000 | E: 96 | L: 1000 | R: 177.6257 | BS: 48000 | FPS: 92.1253 | T: 0:20:11
+| train          | F: 97000 | S: 48500 | E: 97 | L: 1000 | R: 227.5853 | BS: 48500 | FPS: 93.2854 | T: 0:20:21
+| train          | F: 98000 | S: 49000 | E: 98 | L: 1000 | R: 192.3813 | BS: 49000 | FPS: 92.6782 | T: 0:20:32
+| train          | F: 99000 | S: 49500 | E: 99 | L: 1000 | R: 197.2981 | BS: 49500 | FPS: 94.8470 | T: 0:20:43
+| train          | F: 100000 | S: 50000 | E: 100 | L: 1000 | R: 189.3700 | BS: 50000 | FPS: 95.8269 | T: 0:20:53
+| eval           | F: 100000 | S: 50000 | E: 100 | L: 1000 | R: 175.4512 | T: 0:20:53
+| train          | F: 101000 | S: 50500 | E: 101 | L: 1000 | R: 191.8161 | BS: 50500 | FPS: 27.1361 | T: 0:21:30
+| train          | F: 102000 | S: 51000 | E: 102 | L: 1000 | R: 184.7363 | BS: 51000 | FPS: 93.8337 | T: 0:21:41
+| train          | F: 103000 | S: 51500 | E: 103 | L: 1000 | R: 168.0281 | BS: 51500 | FPS: 92.4275 | T: 0:21:51
+| train          | F: 104000 | S: 52000 | E: 104 | L: 1000 | R: 169.7961 | BS: 52000 | FPS: 92.2454 | T: 0:22:02
+| train          | F: 105000 | S: 52500 | E: 105 | L: 1000 | R: 194.8279 | BS: 52500 | FPS: 92.9408 | T: 0:22:13
+| train          | F: 106000 | S: 53000 | E: 106 | L: 1000 | R: 264.6074 | BS: 53000 | FPS: 89.3140 | T: 0:22:24
+| train          | F: 107000 | S: 53500 | E: 107 | L: 1000 | R: 209.0720 | BS: 53500 | FPS: 110.6617 | T: 0:22:33
+| train          | F: 108000 | S: 54000 | E: 108 | L: 1000 | R: 169.2183 | BS: 54000 | FPS: 110.7389 | T: 0:22:42
+| train          | F: 109000 | S: 54500 | E: 109 | L: 1000 | R: 192.2805 | BS: 54500 | FPS: 108.5777 | T: 0:22:51
+| train          | F: 110000 | S: 55000 | E: 110 | L: 1000 | R: 263.8450 | BS: 55000 | FPS: 91.2757 | T: 0:23:02
+| eval           | F: 110000 | S: 55000 | E: 110 | L: 1000 | R: 157.6634 | T: 0:23:02
+| train          | F: 111000 | S: 55500 | E: 111 | L: 1000 | R: 175.4933 | BS: 55500 | FPS: 28.3734 | T: 0:23:38
+| train          | F: 112000 | S: 56000 | E: 112 | L: 1000 | R: 179.0136 | BS: 56000 | FPS: 92.4083 | T: 0:23:48
+| train          | F: 113000 | S: 56500 | E: 113 | L: 1000 | R: 210.1817 | BS: 56500 | FPS: 92.6848 | T: 0:23:59
+| train          | F: 114000 | S: 57000 | E: 114 | L: 1000 | R: 200.0162 | BS: 57000 | FPS: 93.1461 | T: 0:24:10
+| train          | F: 115000 | S: 57500 | E: 115 | L: 1000 | R: 207.7455 | BS: 57500 | FPS: 93.5065 | T: 0:24:21
+| train          | F: 116000 | S: 58000 | E: 116 | L: 1000 | R: 197.9149 | BS: 58000 | FPS: 94.0020 | T: 0:24:31
+| train          | F: 117000 | S: 58500 | E: 117 | L: 1000 | R: 235.0441 | BS: 58500 | FPS: 92.4371 | T: 0:24:42
+| train          | F: 118000 | S: 59000 | E: 118 | L: 1000 | R: 238.8255 | BS: 59000 | FPS: 94.2601 | T: 0:24:53
+| train          | F: 119000 | S: 59500 | E: 119 | L: 1000 | R: 203.3587 | BS: 59500 | FPS: 96.7704 | T: 0:25:03
+| train          | F: 120000 | S: 60000 | E: 120 | L: 1000 | R: 200.6571 | BS: 60000 | FPS: 92.3236 | T: 0:25:14
+| eval           | F: 120000 | S: 60000 | E: 120 | L: 1000 | R: 165.0419 | T: 0:25:14
+| train          | F: 121000 | S: 60500 | E: 121 | L: 1000 | R: 225.5462 | BS: 60500 | FPS: 31.8773 | T: 0:25:45
+| train          | F: 122000 | S: 61000 | E: 122 | L: 1000 | R: 168.0179 | BS: 61000 | FPS: 103.2946 | T: 0:25:55
+| train          | F: 123000 | S: 61500 | E: 123 | L: 1000 | R: 165.9337 | BS: 61500 | FPS: 95.6535 | T: 0:26:05
+| train          | F: 124000 | S: 62000 | E: 124 | L: 1000 | R: 166.0249 | BS: 62000 | FPS: 94.5133 | T: 0:26:16
+| train          | F: 125000 | S: 62500 | E: 125 | L: 1000 | R: 168.2443 | BS: 62500 | FPS: 92.4168 | T: 0:26:27
+| train          | F: 126000 | S: 63000 | E: 126 | L: 1000 | R: 167.8142 | BS: 63000 | FPS: 93.3840 | T: 0:26:38
+| train          | F: 127000 | S: 63500 | E: 127 | L: 1000 | R: 173.5649 | BS: 63500 | FPS: 94.8046 | T: 0:26:48
+| train          | F: 128000 | S: 64000 | E: 128 | L: 1000 | R: 167.3296 | BS: 64000 | FPS: 93.2987 | T: 0:26:59
+| train          | F: 129000 | S: 64500 | E: 129 | L: 1000 | R: 167.0413 | BS: 64500 | FPS: 94.1758 | T: 0:27:09
+| train          | F: 130000 | S: 65000 | E: 130 | L: 1000 | R: 183.2361 | BS: 65000 | FPS: 93.6335 | T: 0:27:20
+| eval           | F: 130000 | S: 65000 | E: 130 | L: 1000 | R: 174.0574 | T: 0:27:20
+| train          | F: 131000 | S: 65500 | E: 131 | L: 1000 | R: 169.4541 | BS: 65500 | FPS: 29.7130 | T: 0:27:54
+| train          | F: 132000 | S: 66000 | E: 132 | L: 1000 | R: 190.7588 | BS: 66000 | FPS: 91.7416 | T: 0:28:05
+| train          | F: 133000 | S: 66500 | E: 133 | L: 1000 | R: 171.2489 | BS: 66500 | FPS: 94.0846 | T: 0:28:15
+| train          | F: 134000 | S: 67000 | E: 134 | L: 1000 | R: 177.0655 | BS: 67000 | FPS: 92.2048 | T: 0:28:26
+| train          | F: 135000 | S: 67500 | E: 135 | L: 1000 | R: 179.8526 | BS: 67500 | FPS: 101.1154 | T: 0:28:36
+| train          | F: 136000 | S: 68000 | E: 136 | L: 1000 | R: 176.4978 | BS: 68000 | FPS: 109.4357 | T: 0:28:45
+| train          | F: 137000 | S: 68500 | E: 137 | L: 1000 | R: 190.6384 | BS: 68500 | FPS: 107.1001 | T: 0:28:54
+| train          | F: 138000 | S: 69000 | E: 138 | L: 1000 | R: 173.4657 | BS: 69000 | FPS: 94.5503 | T: 0:29:05
+| train          | F: 139000 | S: 69500 | E: 139 | L: 1000 | R: 171.6348 | BS: 69500 | FPS: 90.5934 | T: 0:29:16
+| train          | F: 140000 | S: 70000 | E: 140 | L: 1000 | R: 179.8345 | BS: 70000 | FPS: 89.7347 | T: 0:29:27
+| eval           | F: 140000 | S: 70000 | E: 140 | L: 1000 | R: 184.1035 | T: 0:29:27
+| train          | F: 141000 | S: 70500 | E: 141 | L: 1000 | R: 178.4421 | BS: 70500 | FPS: 28.4561 | T: 0:30:02
+| train          | F: 142000 | S: 71000 | E: 142 | L: 1000 | R: 182.1658 | BS: 71000 | FPS: 93.9690 | T: 0:30:13
+| train          | F: 143000 | S: 71500 | E: 143 | L: 1000 | R: 183.7422 | BS: 71500 | FPS: 96.0827 | T: 0:30:23
+| train          | F: 144000 | S: 72000 | E: 144 | L: 1000 | R: 202.6464 | BS: 72000 | FPS: 95.3748 | T: 0:30:34
+| train          | F: 145000 | S: 72500 | E: 145 | L: 1000 | R: 186.3118 | BS: 72500 | FPS: 92.4750 | T: 0:30:45
+| train          | F: 146000 | S: 73000 | E: 146 | L: 1000 | R: 248.9664 | BS: 73000 | FPS: 93.5512 | T: 0:30:55
+| train          | F: 147000 | S: 73500 | E: 147 | L: 1000 | R: 182.8828 | BS: 73500 | FPS: 91.5707 | T: 0:31:06
+| train          | F: 148000 | S: 74000 | E: 148 | L: 1000 | R: 201.1929 | BS: 74000 | FPS: 91.2157 | T: 0:31:17
+| train          | F: 149000 | S: 74500 | E: 149 | L: 1000 | R: 199.1451 | BS: 74500 | FPS: 93.2471 | T: 0:31:28
+| train          | F: 150000 | S: 75000 | E: 150 | L: 1000 | R: 185.5161 | BS: 75000 | FPS: 92.8796 | T: 0:31:39
+| eval           | F: 150000 | S: 75000 | E: 150 | L: 1000 | R: 173.3250 | T: 0:31:39
+| train          | F: 151000 | S: 75500 | E: 151 | L: 1000 | R: 276.6041 | BS: 75500 | FPS: 31.8434 | T: 0:32:10
+| train          | F: 152000 | S: 76000 | E: 152 | L: 1000 | R: 271.1576 | BS: 76000 | FPS: 96.4524 | T: 0:32:21
+| train          | F: 153000 | S: 76500 | E: 153 | L: 1000 | R: 189.4871 | BS: 76500 | FPS: 96.6111 | T: 0:32:31
+| train          | F: 154000 | S: 77000 | E: 154 | L: 1000 | R: 198.2942 | BS: 77000 | FPS: 96.8605 | T: 0:32:41
+| train          | F: 155000 | S: 77500 | E: 155 | L: 1000 | R: 190.3604 | BS: 77500 | FPS: 94.3852 | T: 0:32:52
+| train          | F: 156000 | S: 78000 | E: 156 | L: 1000 | R: 225.7724 | BS: 78000 | FPS: 93.9456 | T: 0:33:02
+| train          | F: 157000 | S: 78500 | E: 157 | L: 1000 | R: 184.1340 | BS: 78500 | FPS: 96.7250 | T: 0:33:13
+| train          | F: 158000 | S: 79000 | E: 158 | L: 1000 | R: 195.5460 | BS: 79000 | FPS: 92.0494 | T: 0:33:24
+| train          | F: 159000 | S: 79500 | E: 159 | L: 1000 | R: 190.7526 | BS: 79500 | FPS: 89.9072 | T: 0:33:35
+| train          | F: 160000 | S: 80000 | E: 160 | L: 1000 | R: 172.3303 | BS: 80000 | FPS: 91.0363 | T: 0:33:46
+| eval           | F: 160000 | S: 80000 | E: 160 | L: 1000 | R: 193.8923 | T: 0:33:46
+| train          | F: 161000 | S: 80500 | E: 161 | L: 1000 | R: 214.5414 | BS: 80500 | FPS: 28.7583 | T: 0:34:21
+| train          | F: 162000 | S: 81000 | E: 162 | L: 1000 | R: 194.1483 | BS: 81000 | FPS: 92.3594 | T: 0:34:31
+| train          | F: 163000 | S: 81500 | E: 163 | L: 1000 | R: 218.5055 | BS: 81500 | FPS: 92.0188 | T: 0:34:42
+| train          | F: 164000 | S: 82000 | E: 164 | L: 1000 | R: 225.7386 | BS: 82000 | FPS: 107.8514 | T: 0:34:52
+| train          | F: 165000 | S: 82500 | E: 165 | L: 1000 | R: 248.3125 | BS: 82500 | FPS: 108.5235 | T: 0:35:01
+| train          | F: 166000 | S: 83000 | E: 166 | L: 1000 | R: 246.7515 | BS: 83000 | FPS: 109.0243 | T: 0:35:10
+| train          | F: 167000 | S: 83500 | E: 167 | L: 1000 | R: 289.1709 | BS: 83500 | FPS: 93.8185 | T: 0:35:21
+| train          | F: 168000 | S: 84000 | E: 168 | L: 1000 | R: 244.9549 | BS: 84000 | FPS: 91.6244 | T: 0:35:32
+| train          | F: 169000 | S: 84500 | E: 169 | L: 1000 | R: 214.4108 | BS: 84500 | FPS: 92.1778 | T: 0:35:42
+| train          | F: 170000 | S: 85000 | E: 170 | L: 1000 | R: 242.3740 | BS: 85000 | FPS: 94.2469 | T: 0:35:53
+| eval           | F: 170000 | S: 85000 | E: 170 | L: 1000 | R: 205.6878 | T: 0:35:53
+| train          | F: 171000 | S: 85500 | E: 171 | L: 1000 | R: 207.5856 | BS: 85500 | FPS: 28.1338 | T: 0:36:29
+| train          | F: 172000 | S: 86000 | E: 172 | L: 1000 | R: 232.4701 | BS: 86000 | FPS: 93.0658 | T: 0:36:39
+| train          | F: 173000 | S: 86500 | E: 173 | L: 1000 | R: 193.1091 | BS: 86500 | FPS: 88.2602 | T: 0:36:51
+| train          | F: 174000 | S: 87000 | E: 174 | L: 1000 | R: 221.9618 | BS: 87000 | FPS: 91.3565 | T: 0:37:02
+| train          | F: 175000 | S: 87500 | E: 175 | L: 1000 | R: 226.9706 | BS: 87500 | FPS: 89.8398 | T: 0:37:13
+| train          | F: 176000 | S: 88000 | E: 176 | L: 1000 | R: 248.9102 | BS: 88000 | FPS: 92.0325 | T: 0:37:24
+| train          | F: 177000 | S: 88500 | E: 177 | L: 1000 | R: 223.1738 | BS: 88500 | FPS: 94.1130 | T: 0:37:34
+| train          | F: 178000 | S: 89000 | E: 178 | L: 1000 | R: 214.4944 | BS: 89000 | FPS: 94.4832 | T: 0:37:45
+| train          | F: 179000 | S: 89500 | E: 179 | L: 1000 | R: 226.1125 | BS: 89500 | FPS: 101.5018 | T: 0:37:55
+| train          | F: 180000 | S: 90000 | E: 180 | L: 1000 | R: 264.5479 | BS: 90000 | FPS: 113.4826 | T: 0:38:03
+| eval           | F: 180000 | S: 90000 | E: 180 | L: 1000 | R: 244.6839 | T: 0:38:03
+| train          | F: 181000 | S: 90500 | E: 181 | L: 1000 | R: 233.7148 | BS: 90500 | FPS: 29.7066 | T: 0:38:37
+| train          | F: 182000 | S: 91000 | E: 182 | L: 1000 | R: 237.3391 | BS: 91000 | FPS: 7.1857 | T: 0:40:56
+| train          | F: 183000 | S: 91500 | E: 183 | L: 1000 | R: 284.8292 | BS: 91500 | FPS: 24.1900 | T: 0:41:38
+| train          | F: 184000 | S: 92000 | E: 184 | L: 1000 | R: 241.8442 | BS: 92000 | FPS: 1.0900 | T: 0:56:55
+| train          | F: 185000 | S: 92500 | E: 185 | L: 1000 | R: 285.1259 | BS: 92500 | FPS: 99.7532 | T: 0:57:05
+| train          | F: 186000 | S: 93000 | E: 186 | L: 1000 | R: 318.0269 | BS: 93000 | FPS: 103.3473 | T: 0:57:15
+| train          | F: 187000 | S: 93500 | E: 187 | L: 1000 | R: 196.5508 | BS: 93500 | FPS: 100.1812 | T: 0:57:25
+| train          | F: 188000 | S: 94000 | E: 188 | L: 1000 | R: 219.1574 | BS: 94000 | FPS: 100.3483 | T: 0:57:35
+| train          | F: 189000 | S: 94500 | E: 189 | L: 1000 | R: 278.9234 | BS: 94500 | FPS: 99.7408 | T: 0:57:45
+| train          | F: 190000 | S: 95000 | E: 190 | L: 1000 | R: 288.8035 | BS: 95000 | FPS: 96.3756 | T: 0:57:55
+| eval           | F: 190000 | S: 95000 | E: 190 | L: 1000 | R: 278.2424 | T: 0:57:55
+| train          | F: 191000 | S: 95500 | E: 191 | L: 1000 | R: 261.1149 | BS: 95500 | FPS: 29.7369 | T: 0:58:29
+| train          | F: 192000 | S: 96000 | E: 192 | L: 1000 | R: 256.1304 | BS: 96000 | FPS: 109.3071 | T: 0:58:38
+| train          | F: 193000 | S: 96500 | E: 193 | L: 1000 | R: 231.2709 | BS: 96500 | FPS: 111.6005 | T: 0:58:47
+| train          | F: 194000 | S: 97000 | E: 194 | L: 1000 | R: 213.3073 | BS: 97000 | FPS: 95.9809 | T: 0:58:57
+| train          | F: 195000 | S: 97500 | E: 195 | L: 1000 | R: 361.7887 | BS: 97500 | FPS: 95.0310 | T: 0:59:08
+| train          | F: 196000 | S: 98000 | E: 196 | L: 1000 | R: 298.8453 | BS: 98000 | FPS: 94.4827 | T: 0:59:18
+| train          | F: 197000 | S: 98500 | E: 197 | L: 1000 | R: 327.6442 | BS: 98500 | FPS: 94.5852 | T: 0:59:29
+| train          | F: 198000 | S: 99000 | E: 198 | L: 1000 | R: 221.0460 | BS: 99000 | FPS: 94.8063 | T: 0:59:39
+| train          | F: 199000 | S: 99500 | E: 199 | L: 1000 | R: 198.5517 | BS: 99500 | FPS: 93.0863 | T: 0:59:50
+| train          | F: 200000 | S: 100000 | E: 200 | L: 1000 | R: 235.8979 | BS: 100000 | FPS: 7.3746 | T: 1:02:06
+| eval           | F: 200000 | S: 100000 | E: 200 | L: 1000 | R: 222.3103 | T: 1:02:06
+| train          | F: 201000 | S: 100500 | E: 201 | L: 1000 | R: 266.3236 | BS: 100500 | FPS: 28.8736 | T: 1:02:40
+Error executing job with overrides: ['agent._target_=drqv2.DrQV2Agent', 'task@_global_=cartpole_swingup', 'seed=1', 'num_train_frames=510000', 'device=cuda:0']
+Traceback (most recent call last):
+  File "/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py", line 223, in <module>
+    main()
+  File "/usr/local/lib/python3.10/dist-packages/hydra/main.py", line 94, in decorated_main
+    _run_hydra(
+  File "/usr/local/lib/python3.10/dist-packages/hydra/_internal/utils.py", line 394, in _run_hydra
+    _run_app(
+  File "/usr/local/lib/python3.10/dist-packages/hydra/_internal/utils.py", line 457, in _run_app
+    run_and_report(
+  File "/usr/local/lib/python3.10/dist-packages/hydra/_internal/utils.py", line 223, in run_and_report
+    raise ex
+  File "/usr/local/lib/python3.10/dist-packages/hydra/_internal/utils.py", line 220, in run_and_report
+    return func()
+  File "/usr/local/lib/python3.10/dist-packages/hydra/_internal/utils.py", line 458, in <lambda>
+    lambda: hydra.run(
+  File "/usr/local/lib/python3.10/dist-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+  File "/usr/local/lib/python3.10/dist-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/usr/local/lib/python3.10/dist-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+  File "/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py", line 219, in main
+    workspace.train()
+  File "/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py", line 184, in train
+    metrics = self.agent.update(self.replay_iter, self.global_step)
+  File "/workspace/learn-si2e/SI2E/SI2E_DrQv2/drqv2.py", line 377, in update
+    next_obs = self.encoder(next_obs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/learn-si2e/SI2E/SI2E_DrQv2/drqv2.py", line 113, in forward
+    h = self.convnet(obs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/container.py", line 240, in forward
+    input = module(input)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/conv.py", line 554, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/conv.py", line 549, in _conv_forward
+    return F.conv2d(
+  File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/signal_handling.py", line 73, in handler
+    _error_if_any_worker_fails()
+RuntimeError: DataLoader worker (pid 166541) is killed by signal: Killed. 
