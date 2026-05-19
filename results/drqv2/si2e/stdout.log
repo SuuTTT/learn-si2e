@@ -1,0 +1,28 @@
+/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py:210: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path='cfgs', config_name='config')
+/usr/local/lib/python3.10/dist-packages/hydra/_internal/hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+  ret = run_job(
+/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py:210: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path='cfgs', config_name='config')
+workspace: /workspace/learn-si2e/results/drqv2/si2e
+| eval           | F: 0 | S: 0 | E: 0 | L: 1000 | R: 3.3902 | T: 0:00:00
+| train          | F: 5000 | S: 2500 | E: 5 | L: 1000 | R: 97.8251 | BS: 2500 | FPS: 9.9528 | T: 0:01:40
+| train          | F: 6000 | S: 3000 | E: 6 | L: 1000 | R: 71.3610 | BS: 3000 | FPS: 13.7991 | T: 0:02:52
+| train          | F: 7000 | S: 3500 | E: 7 | L: 1000 | R: 75.6678 | BS: 3500 | FPS: 13.1140 | T: 0:04:09
+| train          | F: 8000 | S: 4000 | E: 8 | L: 1000 | R: 75.0398 | BS: 4000 | FPS: 14.0116 | T: 0:05:20
+| train          | F: 9000 | S: 4500 | E: 9 | L: 1000 | R: 72.9859 | BS: 4500 | FPS: 14.1718 | T: 0:06:31
+| train          | F: 10000 | S: 5000 | E: 10 | L: 1000 | R: 73.0705 | BS: 5000 | FPS: 14.1946 | T: 0:07:41
+| eval           | F: 10000 | S: 5000 | E: 10 | L: 1000 | R: 74.9355 | T: 0:07:41
+| train          | F: 11000 | S: 5500 | E: 11 | L: 1000 | R: 72.6428 | BS: 5500 | FPS: 11.7781 | T: 0:09:06
+| train          | F: 12000 | S: 6000 | E: 12 | L: 1000 | R: 71.8499 | BS: 6000 | FPS: 14.2292 | T: 0:10:16
+| train          | F: 13000 | S: 6500 | E: 13 | L: 1000 | R: 73.0586 | BS: 6500 | FPS: 13.7949 | T: 0:11:29
+| train          | F: 14000 | S: 7000 | E: 14 | L: 1000 | R: 72.7830 | BS: 7000 | FPS: 13.6688 | T: 0:12:42
+| train          | F: 15000 | S: 7500 | E: 15 | L: 1000 | R: 71.4975 | BS: 7500 | FPS: 14.3719 | T: 0:13:51
+| train          | F: 16000 | S: 8000 | E: 16 | L: 1000 | R: 71.0095 | BS: 8000 | FPS: 14.1332 | T: 0:15:02

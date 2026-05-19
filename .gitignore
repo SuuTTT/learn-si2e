@@ -1,0 +1,47 @@
+# Nested git repos — tracked as external dependencies, not submodules
+SI2E/
+base-rl-starter-files/
+base-torch-ac/
+base-drqv2/
+base-vcse/
+minigrid-pinned/
+
+# Paper PDFs (large binaries — download separately)
+*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Hydra runtime outputs
+**/exp/
+**/exp_fixed/
+**/.hydra/
+
+# Training artifacts — large binary / replay data
+**/buffer/
+**/eval_video/
+**/tb/
+**/*.mp4
+**/*.gif
+**/*.png
+
+# Model snapshots (large)
+**/snapshot.pt
+**/*.pt
+**/*.pth
+
+# Logs we don't need tracked (train.csv is large; keep eval.csv + train.log)
+**/train.csv
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
