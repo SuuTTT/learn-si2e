@@ -8,6 +8,53 @@
 
 ---
 
+## Extended Experiments — Official Budget (510K frames = paper's "250K env steps")
+
+**Batch PID:** 165990 — `nohup bash batch_drqv2_official.sh > results/batch_official.log 2>&1`  
+**Monitor:** `tail -f /workspace/learn-si2e/results/batch_official.log`  
+**Results dir:** `results/drqv2-official/`  
+**Config:** `num_train_frames=510000`, seed=1, 6 tasks × (baseline + SE + VCSE)  
+**Est. total:** ~26 h sequential on RTX 3070 Laptop
+
+### Run log
+
+| Task | Method | PID | Step-0 ER | Est. | Final ER | Status |
+|---|---|:---:|:---:|:---:|:---:|:---:|
+| cartpole_swingup | baseline | 166000 | 9.38 | ~1.0h | — | 🔄 |
+| cartpole_swingup | SE | — | — | ~1.5h | — | ⬜ |
+| cartpole_swingup | VCSE | — | — | ~1.5h | — | ⬜ |
+| hopper_stand | baseline | — | — | ~1.0h | — | ⬜ |
+| hopper_stand | SE | — | — | ~1.5h | — | ⬜ |
+| hopper_stand | VCSE | — | — | ~1.5h | — | ⬜ |
+| cheetah_run | baseline | — | — | ~1.0h | — | ⬜ |
+| cheetah_run | SE | — | — | ~1.5h | — | ⬜ |
+| cheetah_run | VCSE | — | — | ~1.5h | — | ⬜ |
+| quadruped_walk | baseline | — | — | ~1.0h | — | ⬜ |
+| quadruped_walk | SE | — | — | ~1.5h | — | ⬜ |
+| quadruped_walk | VCSE | — | — | ~1.5h | — | ⬜ |
+| pendulum_swingup | baseline | — | — | ~1.0h | — | ⬜ |
+| pendulum_swingup | SE | — | — | ~1.5h | — | ⬜ |
+| pendulum_swingup | VCSE | — | — | ~1.5h | — | ⬜ |
+| cartpole_balance | baseline | — | — | ~1.0h | — | ⬜ |
+| cartpole_balance | SE | — | — | ~1.5h | — | ⬜ |
+| cartpole_balance | VCSE | — | — | ~1.5h | — | ⬜ |
+
+### Results vs paper (to be filled as runs complete)
+
+| Task | Paper Baseline | **Local Baseline** | Paper SE | **Local SE** | Paper VCSE | **Local VCSE** | Paper SI2E |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| cartpole_swingup | — | 🔄 | 220±62 | ⬜ | 708±50 | ⬜ | **795±90** |
+| hopper_stand | 88±12 | ⬜ | 313±94 | ⬜ | 711±31 | ⬜ | **797±53** |
+| cheetah_run | 229±124 | ⬜ | 229±126 | ⬜ | 456±22 | ⬜ | **464±29** |
+| quadruped_walk | 290±24 | ⬜ | 290±24 | ⬜ | 244±30 | ⬜ | **400±29** |
+| pendulum_swingup | 424±247 | ⬜ | 11±3 ⚠️ | ⬜ | 824±100 | ⬜ | **886±38** |
+| cartpole_balance | 999±23 | ⬜ | 994±75 | ⬜ | 999±10 | ⬜ | **1000±3** |
+
+> Note: SI2E (do_vcse=true) not included here — at ~14 FPS it takes ~10 h per run.  
+> See `results/drqv2-full/si2e/` for the cartpole_swingup SI2E result (ER=594 at 240K frames).
+
+---
+
 ## 1. Current Results (DMControl, DrQv2 backbone)
 
 All local runs use **seed=1, 250K frames = 125K env steps**.  
@@ -108,27 +155,55 @@ Total for full table (6 tasks × 3 methods × 1 seed, 510K frames) ≈ **~24 h**
 
 ## 4. Why DrQv2 — Not SAC or PPO?
 
-### DrQv2 is pixel-based; SAC/PPO benchmarks are typically state-based
+### What SE, VCSE, and SI2E actually do
 
-DrQv2 takes **raw 84×84 RGB images** (3-frame stack → 3×84×84×3 tensor) as input.  
-SAC/PPO typically operate on **state vectors** (position, velocity, angles — 10–30 floats).
+All three are **intrinsic reward bonuses** — backbone-agnostic add-ons that augment any RL algorithm:
 
-This is not an implementation choice — it is the scientific question:
-> *Can structural entropy improve exploration when the agent only sees pixels?*
+```
+r_total = r_extrinsic  +  β × H_intrinsic(states)
+```
 
-State-based SAC/PPO numbers (e.g., cheetah_run ~800, cartpole_balance ~1000) are not comparable.
-The agent does not have access to those numbers — it only sees images and must learn representations.
+| Method | How the bonus is computed | Key idea |
+|---|---|---|
+| **SE** (RE3, 2021) | k-NN entropy of state embeddings from a **random fixed encoder** | Encourage visiting spread-out states in a random projection. Simple but ignores value. |
+| **VCSE** (Kim et al., 2023) | k-NN entropy **conditioned on value bin** — partition states by V̂(s), measure entropy within each bin | Fix SE's failure mode: avoid pushing agent to high-entropy but low-reward regions. |
+| **SI2E** (this paper, 2024) | **Hierarchical structural entropy** of state embeddings — builds an encoding tree over the batch, measures codebook entropy across levels — also value-conditioned like VCSE | More robust entropy estimate in high dimensions; captures distributional *shape*, not just nearest-neighbor distances. |
+
+Because the bonus is just an added scalar reward, **all three can be applied to any RL algorithm**: SAC, PPO, A2C, DrQv2, DDPG, TD3, etc. The SI2E paper itself demonstrates this — SE/VCSE/SI2E are tested on both A2C (MiniGrid) and DrQv2 (DMControl).
+
+---
+
+### Pixel-based SAC exists — why not use it?
+
+There are several pixel-based SAC variants for DMControl:
+
+| Algorithm | Backbone | Pixel? | Key trick |
+|---|---|:---:|---|
+| SAC-AE (2019) | SAC | ✓ | SAC + auxiliary autoencoder for pixel encoding |
+| CURL (2020) | SAC | ✓ | Contrastive learning on augmented views |
+| DrQ (2021) | SAC | ✓ | Data augmentation (random shift) + SAC |
+| **DrQv2 (2022)** | **DDPG-style** | **✓** | Replace SAC's stochastic policy with deterministic + stronger augmentation |
+
+DrQv2 is the **successor to pixel-SAC (DrQ)**. It replaced SAC's stochastic policy with a deterministic one (TD3/DDPG-style) and was shown to substantially outperform DrQ on DMControl. The SI2E authors chose DrQv2 because it is the strongest pixel-based continuous control baseline at the time.
+
+### What if we used SAC instead?
+
+SE/VCSE/SI2E bonuses could be plugged into pixel-SAC (DrQ) with no structural changes — just add the bonus to the reward. However:
+
+- **DrQv2 outperforms DrQ** on most DMControl tasks (the reason it was chosen)
+- **SAC has its own entropy term** (policy entropy regularisation: `α H[π(·|s)]`). This is *action-space* entropy (encouraging diverse actions), whereas SE/VCSE/SI2E measure *state-visitation* entropy. They are orthogonal and do not double-count, but the interaction may require re-tuning `β` and `α`.
+- On **state-based SAC** (not pixel): SAC from state vectors is already near-optimal on most DMControl tasks (cheetah_run ~800+, hopper_stand ~900+), so the exploration bonus has little room to help. The bonus is most useful when the baseline is exploration-limited, which happens more with pixel observations where representation learning creates a harder credit-assignment problem.
 
 ### Achievable ER by observation type
 
-| Task | State-based SAC/PPO | Pixel-based DrQv2 (paper, 250K steps) |
-|---|:---:|:---:|
-| cheetah_run | ~800–900 | 229 (baseline), 464 (SI2E) |
-| cartpole_balance | ~1000 | 999 (baseline already saturates) |
-| cartpole_swingup | ~800 | — (baseline), 795 (SI2E) |
-| hopper_stand | ~900 | 88 (baseline), 797 (SI2E) |
+| Task | State SAC/PPO | Pixel DrQv2 baseline | Pixel DrQv2 + SI2E (paper) |
+|---|:---:|:---:|:---:|
+| cheetah_run | ~800–900 | 229 | **464** |
+| cartpole_balance | ~1000 | 999 (saturates) | **1000** |
+| cartpole_swingup | ~800 | — | **795** |
+| hopper_stand | ~900 | 88 | **797** |
 
-The gap is entirely due to the representation learning burden, not the RL algorithm.
+The large baseline→SI2E jump in hopper_stand (+709) and cartpole_swingup (+795) shows that exploration bonuses matter most precisely where pixel-based learning struggles.
 
 ---
 

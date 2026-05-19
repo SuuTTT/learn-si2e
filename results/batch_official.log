@@ -1,0 +1,12 @@
+nohup: ignoring input
+[12:42:55] === batch_drqv2_official: 510K frames × 6 tasks × (baseline+SE+VCSE) × seed=1 ===
+[12:42:55] === Results → /workspace/learn-si2e/results/drqv2-official ===
+[12:42:55] LAUNCH: cartpole_swingup / baseline / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_baseline_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+BASELINE / cartpole_swingup / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  166000
+Est. duration        ~1.0h (135 FPS)
+Step-0 ER            9.3777
+
