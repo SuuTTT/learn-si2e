@@ -1,4 +1,6 @@
-# Nested git repos — tracked as external dependencies, not submodules
+# Nested git repos — excluded because each contains its own .git/ directory.
+# Git cannot track nested repos as regular directories (would become broken submodules).
+# Clone instructions and local patch descriptions are in handoff.md and REPRODUCE_LOG.md.
 SI2E/
 base-rl-starter-files/
 base-torch-ac/

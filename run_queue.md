@@ -18,7 +18,7 @@
 | 5 | Cartpole Swingup | DrQv2 + SE | 250K frames | ~37 min | `results/drqv2-full/se/` | ✅ done | ER=660 @ 240K 🍀 |
 | 6 | Cartpole Swingup | DrQv2 + VCSE | 250K frames | ~37 min | `results/drqv2-full/vcse/` | ⬜ queued | — |
 | 7 | DoorKey-8x8 | A2C + SI2E | 3M frames | ~97 min | `results/a2c-full/si2e/` | ⬜ queued | — |
-| 8 | Cartpole Swingup | DrQv2 + SI2E | 250K frames | ~296 min | `results/drqv2-full/si2e/` | 🔄 running (PID 55737) | 🔄 ~334 @ 170K |
+| 8 | Cartpole Swingup | DrQv2 + SI2E | 250K frames | ~296 min | `results/drqv2-full/si2e/` | 🔄 running (PID 55737) | 🔄 ~350 @ 180K (76%) |
 
 > MADE: external baseline not present in SI2E or VCSE repos — skipped until repo is sourced.
 
@@ -205,7 +205,7 @@ echo "PID: $!"
 | **Est. wall time** | ~296 min (4.9 h) |
 | **Result path** | `results/drqv2-full/si2e/eval.csv` |
 | **Status** | 🔄 running — PID 55737 |
-| **Progress** | ~179K / 250K frames, ER ≈ 334 @ 170K |
+| **Progress** | ~189K / 250K frames, ER ≈ 350 @ 180K — ~1 h remaining |
 
 ```bash
 # Check progress:

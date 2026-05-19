@@ -1,0 +1,23 @@
+nohup: ignoring input
+[07:07:34] Waiting for DrQv2+SI2E (PID 55737) to finish...
+[07:37:35] DrQv2+SI2E finished. Starting batch.
+[07:37:35] === Phase 1: 5 tasks × baseline+SE × seed=1 ===
+[07:37:35] START: hopper_stand / baseline / seed=1  →  /workspace/learn-si2e/results/drqv2-full/hopper_stand_baseline_seed1
+| train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 157.2079 | BS: 124500 | FPS: 129.8223 | T: 0:37:56
+[08:15:44] DONE:  hopper_stand / baseline / seed=1  →  final eval: 240.0,1000.0,125.36408067875371,240000,120000.0,2190.4338517189026
+[08:15:44] START: hopper_stand / se / seed=1  →  /workspace/learn-si2e/results/drqv2-full/hopper_stand_se_seed1
+| train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 213.1739 | BS: 124500 | FPS: 91.1379 | T: 0:47:24
+[09:03:26] DONE:  hopper_stand / se / seed=1  →  final eval: 240.0,1000.0,229.81736057696526,240000,120000.0,2734.46572637558
+[09:03:26] START: cheetah_run / baseline / seed=1  →  /workspace/learn-si2e/results/drqv2-full/cheetah_run_baseline_seed1
+| train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 202.2687 | BS: 124500 | FPS: 137.9974 | T: 0:37:55
+[09:41:36] DONE:  cheetah_run / baseline / seed=1  →  final eval: 240.0,1000.0,246.15658797166643,240000,120000.0,2190.265698671341
+[09:41:36] START: cheetah_run / se / seed=1  →  /workspace/learn-si2e/results/drqv2-full/cheetah_run_se_seed1
+| train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 162.0298 | BS: 124500 | FPS: 94.5732 | T: 0:47:14
+[10:29:08] DONE:  cheetah_run / se / seed=1  →  final eval: 240.0,1000.0,180.3917743332314,240000,120000.0,2723.4498479366302
+[10:29:08] START: quadruped_walk / baseline / seed=1  →  /workspace/learn-si2e/results/drqv2-full/quadruped_walk_baseline_seed1
+| train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 247.1512 | BS: 124500 | FPS: 130.3325 | T: 0:41:12
+[11:10:34] DONE:  quadruped_walk / baseline / seed=1  →  final eval: 240.0,1000.0,157.37722041565732,240000,120000.0,2380.9400420188904
+[11:10:34] START: quadruped_walk / se / seed=1  →  /workspace/learn-si2e/results/drqv2-full/quadruped_walk_se_seed1
+| train          | F: 249000 | S: 124500 | E: 249 | L: 1000 | R: 0.3524 | BS: 124500 | FPS: 95.7674 | T: 0:51:14
+[12:02:06] DONE:  quadruped_walk / se / seed=1  →  final eval: 240.0,1000.0,270.6118827133209,240000,120000.0,2961.6381900310516
+[12:02:06] START: pendulum_swingup / baseline / seed=1  →  /workspace/learn-si2e/results/drqv2-full/pendulum_swingup_baseline_seed1
