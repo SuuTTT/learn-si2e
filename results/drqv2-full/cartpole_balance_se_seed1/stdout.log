@@ -1,0 +1,14 @@
+/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py:210: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path='cfgs', config_name='config')
+/usr/local/lib/python3.10/dist-packages/hydra/_internal/hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+  ret = run_job(
+/workspace/learn-si2e/SI2E/SI2E_DrQv2/train.py:210: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path='cfgs', config_name='config')
+workspace: /workspace/learn-si2e/results/drqv2-full/cartpole_balance_se_seed1

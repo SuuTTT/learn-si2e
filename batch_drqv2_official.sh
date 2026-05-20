@@ -89,6 +89,7 @@ run_si2e() {
         ${agent_do_vcse} \
         "task@_global_=${task}" \
         seed="$seed" num_train_frames=510000 device=cuda:0 \
+        replay_buffer_size=100000 replay_buffer_num_workers=2 \
         hydra.run.dir="$dir" > "$logfile" 2>&1 &
     local pid=$!
 
@@ -123,6 +124,7 @@ run_vcse() {
         agent.do_vcse=true \
         "task@_global_=${task}" \
         seed="$seed" num_train_frames=510000 device=cuda:0 \
+        replay_buffer_size=100000 replay_buffer_num_workers=2 \
         hydra.run.dir="$dir" > "$logfile" 2>&1 &
     local pid=$!
 

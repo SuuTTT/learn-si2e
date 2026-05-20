@@ -10,3 +10,156 @@ PID                  166000
 Est. duration        ~1.0h (135 FPS)
 Step-0 ER            9.3777
 
+[14:45:52] === batch_drqv2_official: 510K frames × 6 tasks × (baseline+SE+VCSE) × seed=1 ===
+[14:45:52] === Results → /workspace/learn-si2e/results/drqv2-official ===
+[14:45:52] LAUNCH: cartpole_swingup / baseline / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_baseline_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+BASELINE / cartpole_swingup / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  189939
+Est. duration        ~1.0h (135 FPS)
+Step-0 ER            9.3777
+
+nohup: ignoring input
+[20:37:25] === batch_drqv2_official: 510K frames × 6 tasks × (baseline+SE+VCSE) × seed=1 ===
+[20:37:25] === Results → /workspace/learn-si2e/results/drqv2-official ===
+[20:37:25] LAUNCH: cartpole_swingup / baseline / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_baseline_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+BASELINE / cartpole_swingup / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  2709
+Est. duration        ~1.0h (135 FPS)
+Step-0 ER            9.3777
+
+[21:52:51] DONE:  cartpole_swingup / baseline / seed=1  ER=751.0  →  /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_baseline_seed1
+[21:52:51] LAUNCH: cartpole_swingup / se / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_se_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+SE / cartpole_swingup / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  5360
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            9.3777
+
+[23:29:05] DONE:  cartpole_swingup / se / seed=1  ER=870.2  →  /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_se_seed1
+[23:29:05] LAUNCH: cartpole_swingup / VCSE / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_vcse_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+VCSE / cartpole_swingup / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  7874
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            9.3777
+
+[01:58:44] DONE:  cartpole_swingup / VCSE / seed=1  ER=858.1  →  /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_vcse_seed1
+[01:58:44] LAUNCH: hopper_stand / baseline / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/hopper_stand_baseline_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+BASELINE / hopper_stand / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  10556
+Est. duration        ~1.0h (135 FPS)
+Step-0 ER            1.4988
+
+[03:19:08] DONE:  hopper_stand / baseline / seed=1  ER=477.7  →  /workspace/learn-si2e/results/drqv2-official/hopper_stand_baseline_seed1
+[03:19:08] LAUNCH: hopper_stand / se / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/hopper_stand_se_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+SE / hopper_stand / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  13073
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            1.4988
+
+[04:59:43] DONE:  hopper_stand / se / seed=1  ER=8.1  →  /workspace/learn-si2e/results/drqv2-official/hopper_stand_se_seed1
+[04:59:43] LAUNCH: hopper_stand / VCSE / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/hopper_stand_vcse_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+VCSE / hopper_stand / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  15661
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            1.4988
+
+[07:30:33] DONE:  hopper_stand / VCSE / seed=1  ER=915.4  →  /workspace/learn-si2e/results/drqv2-official/hopper_stand_vcse_seed1
+[07:30:33] LAUNCH: cheetah_run / baseline / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cheetah_run_baseline_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+BASELINE / cheetah_run / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  19357
+Est. duration        ~1.0h (135 FPS)
+Step-0 ER            0.2346
+
+[08:50:53] DONE:  cheetah_run / baseline / seed=1  ER=456.6  →  /workspace/learn-si2e/results/drqv2-official/cheetah_run_baseline_seed1
+[08:50:53] LAUNCH: cheetah_run / se / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cheetah_run_se_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+SE / cheetah_run / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  28561
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            0.2346
+
+[10:29:49] DONE:  cheetah_run / se / seed=1  ER=0.3  →  /workspace/learn-si2e/results/drqv2-official/cheetah_run_se_seed1
+[10:29:49] LAUNCH: cheetah_run / VCSE / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cheetah_run_vcse_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+VCSE / cheetah_run / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  57754
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            0.2346
+
+[13:19:10] DONE:  cheetah_run / VCSE / seed=1  ER=678.7  →  /workspace/learn-si2e/results/drqv2-official/cheetah_run_vcse_seed1
+[13:19:10] LAUNCH: quadruped_walk / baseline / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/quadruped_walk_baseline_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+BASELINE / quadruped_walk / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  106042
+Est. duration        ~1.0h (135 FPS)
+Step-0 ER            104.0255
+
+[15:18:22] DONE:  quadruped_walk / baseline / seed=1  ER=196.9  →  /workspace/learn-si2e/results/drqv2-official/quadruped_walk_baseline_seed1
+[15:18:22] LAUNCH: quadruped_walk / se / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/quadruped_walk_se_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+SE / quadruped_walk / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  140865
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            104.0255
+
+[17:41:26] DONE:  quadruped_walk / se / seed=1  ER=311.8  →  /workspace/learn-si2e/results/drqv2-official/quadruped_walk_se_seed1
+[17:41:26] LAUNCH: quadruped_walk / VCSE / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/quadruped_walk_vcse_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+VCSE / quadruped_walk / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  182093
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            104.0255
+
+[20:55:21] DONE:  quadruped_walk / VCSE / seed=1  ER=784.6  →  /workspace/learn-si2e/results/drqv2-official/quadruped_walk_vcse_seed1
+[20:55:21] LAUNCH: pendulum_swingup / baseline / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_baseline_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+BASELINE / pendulum_swingup / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  236884
+Est. duration        ~1.0h (135 FPS)
+Step-0 ER            0.0000
+
+[22:37:01] DONE:  pendulum_swingup / baseline / seed=1  ER=846.6  →  /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_baseline_seed1
+[22:37:01] LAUNCH: pendulum_swingup / se / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_se_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+SE / pendulum_swingup / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  266811
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            0.0000
+
