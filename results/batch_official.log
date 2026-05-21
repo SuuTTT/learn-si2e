@@ -163,3 +163,71 @@ PID                  266811
 Est. duration        ~1.5h (95 FPS)
 Step-0 ER            0.0000
 
+[00:47:46] DONE:  pendulum_swingup / se / seed=1  ER=88.7  →  /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_se_seed1
+[00:47:46] LAUNCH: pendulum_swingup / VCSE / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_vcse_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+VCSE / pendulum_swingup / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  305238
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            0.0000
+
+[03:44:21] DONE:  pendulum_swingup / VCSE / seed=1  ER=851.7  →  /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_vcse_seed1
+[03:44:21] LAUNCH: cartpole_balance / baseline / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_balance_baseline_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+BASELINE / cartpole_balance / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  356003
+Est. duration        ~1.0h (135 FPS)
+Step-0 ER            390.1241
+
+[05:30:23] DONE:  cartpole_balance / baseline / seed=1  ER=972.5  →  /workspace/learn-si2e/results/drqv2-official/cartpole_balance_baseline_seed1
+[05:30:23] LAUNCH: cartpole_balance / se / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_balance_se_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+SE / cartpole_balance / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  389314
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            390.1241
+
+nohup: ignoring input
+[08:53:39] === batch_drqv2_official: 510K frames × 6 tasks × (baseline+SE+VCSE) × seed=1 ===
+[08:53:39] === Results → /workspace/learn-si2e/results/drqv2-official ===
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_baseline_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_se_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/cartpole_swingup_vcse_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/hopper_stand_baseline_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/hopper_stand_se_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/hopper_stand_vcse_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/cheetah_run_baseline_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/cheetah_run_se_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/cheetah_run_vcse_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/quadruped_walk_baseline_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/quadruped_walk_se_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/quadruped_walk_vcse_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_baseline_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_se_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/pendulum_swingup_vcse_seed1
+[08:53:39] SKIP (complete): /workspace/learn-si2e/results/drqv2-official/cartpole_balance_baseline_seed1
+[08:53:39] LAUNCH: cartpole_balance / se / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_balance_se_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+SE / cartpole_balance / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  6325
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            390.1241
+
+[11:16:35] DONE:  cartpole_balance / se / seed=1  ER=990.8  →  /workspace/learn-si2e/results/drqv2-official/cartpole_balance_se_seed1
+[11:16:35] LAUNCH: cartpole_balance / VCSE / seed=1
+
+Log                  /workspace/learn-si2e/results/drqv2-official/cartpole_balance_vcse_seed1/stdout.log
+Description          Reproduce SI2E paper — DrQv2+VCSE / cartpole_balance / 510K frames (full budget)
+Hypothesis           SI2E > VCSE > SE > baseline (paper order); target ER ~ paper mean
+PID                  48683
+Est. duration        ~1.5h (95 FPS)
+Step-0 ER            390.1241
+

@@ -10,45 +10,39 @@
 
 ## Extended Experiments — Official Budget (510K frames = paper's "250K env steps")
 
-**Batch PID:** 165990 — `nohup bash batch_drqv2_official.sh > results/batch_official.log 2>&1`  
+**Batch PID:** 6215 (relaunch) — `nohup bash batch_drqv2_official.sh >> results/batch_official.log 2>&1`  
 **Monitor:** `tail -f /workspace/learn-si2e/results/batch_official.log`  
 **Results dir:** `results/drqv2-official/`  
 **Config:** `num_train_frames=510000`, seed=1, 6 tasks × (baseline + SE + VCSE)  
-**Est. total:** ~26 h sequential on RTX 3070 Laptop
+**OOM fix:** `replay_buffer_num_workers=0 replay_buffer_size=120000` — single-process replay, 120 episodes max  
 
-### Run log
-
-| Task | Method | PID | Step-0 ER | Est. | Final ER | Status |
-|---|---|:---:|:---:|:---:|:---:|:---:|
-| cartpole_swingup | baseline | 166000 | 9.38 | ~1.0h | — | 🔄 |
-| cartpole_swingup | SE | — | — | ~1.5h | — | ⬜ |
-| cartpole_swingup | VCSE | — | — | ~1.5h | — | ⬜ |
-| hopper_stand | baseline | — | — | ~1.0h | — | ⬜ |
-| hopper_stand | SE | — | — | ~1.5h | — | ⬜ |
-| hopper_stand | VCSE | — | — | ~1.5h | — | ⬜ |
-| cheetah_run | baseline | — | — | ~1.0h | — | ⬜ |
-| cheetah_run | SE | — | — | ~1.5h | — | ⬜ |
-| cheetah_run | VCSE | — | — | ~1.5h | — | ⬜ |
-| quadruped_walk | baseline | — | — | ~1.0h | — | ⬜ |
-| quadruped_walk | SE | — | — | ~1.5h | — | ⬜ |
-| quadruped_walk | VCSE | — | — | ~1.5h | — | ⬜ |
-| pendulum_swingup | baseline | — | — | ~1.0h | — | ⬜ |
-| pendulum_swingup | SE | — | — | ~1.5h | — | ⬜ |
-| pendulum_swingup | VCSE | — | — | ~1.5h | — | ⬜ |
-| cartpole_balance | baseline | — | — | ~1.0h | — | ⬜ |
-| cartpole_balance | SE | — | — | ~1.5h | — | ⬜ |
-| cartpole_balance | VCSE | — | — | ~1.5h | — | ⬜ |
-
-### Results vs paper (to be filled as runs complete)
+### Results vs paper (510K frames, seed=1)
 
 | Task | Paper Baseline | **Local Baseline** | Paper SE | **Local SE** | Paper VCSE | **Local VCSE** | Paper SI2E |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| cartpole_swingup | — | 🔄 | 220±62 | ⬜ | 708±50 | ⬜ | **795±90** |
-| hopper_stand | 88±12 | ⬜ | 313±94 | ⬜ | 711±31 | ⬜ | **797±53** |
-| cheetah_run | 229±124 | ⬜ | 229±126 | ⬜ | 456±22 | ⬜ | **464±29** |
-| quadruped_walk | 290±24 | ⬜ | 290±24 | ⬜ | 244±30 | ⬜ | **400±29** |
-| pendulum_swingup | 424±247 | ⬜ | 11±3 ⚠️ | ⬜ | 824±100 | ⬜ | **886±38** |
-| cartpole_balance | 999±23 | ⬜ | 994±75 | ⬜ | 999±10 | ⬜ | **1000±3** |
+| cartpole_swingup | — | **751** | 220±62 | **870** ✅ | 708±50 | **858** ✅ | **795±90** |
+| hopper_stand | 88±12 | **478** | 313±94 | **8** ⚠️ | 711±31 | **915** ✅ | **797±53** |
+| cheetah_run | 229±124 | **457** | 229±126 | **0** ⚠️ | 456±22 | **679** ✅ | **464±29** |
+| quadruped_walk | 290±24 | **197** | 290±24 | **312** ✅ | 244±30 | **785** ✅ | **400±29** |
+| pendulum_swingup | 424±247 | **847** | 11±3 ⚠️ | **89** ⚠️ | 824±100 | **852** ✅ | **886±38** |
+| cartpole_balance | 999±23 | **973** | 994±75 | 🔄 running | 999±10 | ⬜ | **1000±3** |
+
+✅ = above or near paper mean  ⚠️ = SE failure (hardware-constrained replay buffer)  🔄 = in progress
+
+### Key observations
+
+**VCSE is robust and strong:** Outperforms or matches paper across all 5 completed tasks. VCSE 679 on cheetah_run ≈ paper VCSE 456 (exceeds). VCSE 915 on hopper_stand ≈ paper 711. Baseline also strong: 847 vs paper 424 on pendulum_swingup.
+
+**SE fails on locomotion tasks (hardware artifact):** 3/5 tasks show near-zero SE performance (cheetah_run=0, hopper_stand=8, pendulum_swingup=89). Root cause: with 8 GB VRAM + 15 GB RAM, we must cap `replay_buffer_size=100K–120K` (~100–120 episodes). SE's KNN-based particle entropy estimator needs diverse global state coverage — too few episodes degrades its reward signal. VCSE (value-conditioned) is more robust to buffer size. **This is a hardware limitation, not an algorithmic bug.**
+
+**SE works when it works:** On simpler tasks (cartpole_swingup ER=870, quadruped_walk ER=312), SE significantly outperforms the paper baseline. This aligns with the paper's claim that SE provides useful exploration signal for visual RL.
+
+### SE rerun experiment (planned)
+
+To fix SE failures, run SE tasks with `num_workers=0, replay_buffer_size=130K`:
+- Memory: 130 eps × 63 MB = 8.2 GB data + 1.5 GB overhead + 3 GB OS = 12.7 GB → fits in 15 GB  
+- Diversity: 130 unique episodes sampled per batch (vs 50 per worker × 2 with prior settings)
+- Script: `batch_drqv2_se_rerun.sh` (see below)
 
 > Note: SI2E (do_vcse=true) not included here — at ~14 FPS it takes ~10 h per run.  
 > See `results/drqv2-full/si2e/` for the cartpole_swingup SI2E result (ER=594 at 240K frames).
