@@ -1,1 +1,15 @@
 nohup: ignoring input
+[14:55:59] Official batch done. Starting SE rerun...
+SE rerun PID: 111398
+[14:55:59] === batch_drqv2_se_rerun: 3 SE-failed tasks × seed=1, buf=130K, workers=0 ===
+[14:55:59] === Results → /workspace/learn-si2e/results/drqv2-se-rerun ===
+[14:55:59] LAUNCH: cheetah_run / SE / seed=1
+[14:55:59]   PID=111404  log=/workspace/learn-si2e/results/drqv2-se-rerun/cheetah_run_se_seed1/stdout.log
+[17:24:25] DONE:  cheetah_run / SE / seed=1  ER=396.4  →  /workspace/learn-si2e/results/drqv2-se-rerun/cheetah_run_se_seed1
+[17:24:25] LAUNCH: hopper_stand / SE / seed=1
+[17:24:25]   PID=155101  log=/workspace/learn-si2e/results/drqv2-se-rerun/hopper_stand_se_seed1/stdout.log
+[19:50:42] DONE:  hopper_stand / SE / seed=1  ER=8.1  →  /workspace/learn-si2e/results/drqv2-se-rerun/hopper_stand_se_seed1
+[19:50:42] LAUNCH: pendulum_swingup / SE / seed=1
+[19:50:42]   PID=198892  log=/workspace/learn-si2e/results/drqv2-se-rerun/pendulum_swingup_se_seed1/stdout.log
+[22:12:56] DONE:  pendulum_swingup / SE / seed=1  ER=810.8  →  /workspace/learn-si2e/results/drqv2-se-rerun/pendulum_swingup_se_seed1
+[22:12:56] === ALL DONE ===

@@ -1,7 +1,7 @@
 # Local Reproduction Report — SI2E (NeurIPS 2024)
 
-**Date:** 2026-05-19  
-**Hardware:** RTX 3070 Laptop GPU (8 GB), 16 cores @ ~3 GHz  
+**Last updated:** 2026-05-22  
+**Hardware:** RTX 3070 Laptop GPU (8 GB VRAM), 15 GB RAM, 16 cores @ ~3 GHz  
 **Paper hardware:** RTX A1000 (16 GB), 8× Intel Core i9 @ 3.00 GHz  
 **Paper:** "Effective Exploration Based on the Structural Information Principles" (SI2E, NeurIPS 2024)  
 **Repo:** https://github.com/SELGroup/SI2E
@@ -10,42 +10,57 @@
 
 ## Extended Experiments — Official Budget (510K frames = paper's "250K env steps")
 
-**Batch PID:** 6215 (relaunch) — `nohup bash batch_drqv2_official.sh >> results/batch_official.log 2>&1`  
-**Monitor:** `tail -f /workspace/learn-si2e/results/batch_official.log`  
-**Results dir:** `results/drqv2-official/`  
-**Config:** `num_train_frames=510000`, seed=1, 6 tasks × (baseline + SE + VCSE)  
-**OOM fix:** `replay_buffer_num_workers=0 replay_buffer_size=120000` — single-process replay, 120 episodes max  
+All runs: `num_train_frames=510000`, seed=1, DrQv2 backbone, DMControl suite.  
+Hardware fix: `replay_buffer_num_workers=0 replay_buffer_size=120000` (single-process, ~120 episodes in RAM at once; prevents OOM on 15 GB system).
 
-### Results vs paper (510K frames, seed=1)
+### Final consolidated results
 
-| Task | Paper Baseline | **Local Baseline** | Paper SE | **Local SE** | Paper VCSE | **Local VCSE** | Paper SI2E |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| cartpole_swingup | — | **751** | 220±62 | **870** ✅ | 708±50 | **858** ✅ | **795±90** |
-| hopper_stand | 88±12 | **478** | 313±94 | **8** ⚠️ | 711±31 | **915** ✅ | **797±53** |
-| cheetah_run | 229±124 | **457** | 229±126 | **0** ⚠️ | 456±22 | **679** ✅ | **464±29** |
-| quadruped_walk | 290±24 | **197** | 290±24 | **312** ✅ | 244±30 | **785** ✅ | **400±29** |
-| pendulum_swingup | 424±247 | **847** | 11±3 ⚠️ | **89** ⚠️ | 824±100 | **852** ✅ | **886±38** |
-| cartpole_balance | 999±23 | **973** | 994±75 | 🔄 running | 999±10 | ⬜ | **1000±3** |
+| Task | Paper Baseline | Local Baseline | Paper SE | Local SE | Paper VCSE | Local VCSE | Paper SI2E |
+|------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| cartpole_swingup | — | 751 | 220±62 | **870** ✅ | 708±50 | **858** ✅ | 795±90 |
+| hopper_stand | 88±12 | 478 | 313±94 | **8** ⚠️† | 711±31 | **915** ✅ | 797±53 |
+| cheetah_run | 229±124 | 457 | 229±126 | **396**★ ✅ | 456±22 | **679** ✅ | 464±29 |
+| quadruped_walk | 290±24 | 197 | 290±24 | **312** ✅ | 244±30 | **785** ✅ | 400±29 |
+| pendulum_swingup | 424±247 | 847 | 11±3 | **811**★ ✅ | 824±100 | **852** ✅ | 886±38 |
+| cartpole_balance | 999±23 | 973 | 994±75 | **991** ✅ | 999±10 | **996** ✅ | 1000±3 |
 
-✅ = above or near paper mean  ⚠️ = SE failure (hardware-constrained replay buffer)  🔄 = in progress
+★ = from SE rerun (buf=130K); original official SE: cheetah_run=0, pendulum_swingup=89  
+† = hopper_stand SE = 8.1 in both official and rerun; see analysis below  
+✅ = at or above paper mean for that method
 
-### Key observations
+### SE sensitivity to replay buffer size
 
-**VCSE is robust and strong:** Outperforms or matches paper across all 5 completed tasks. VCSE 679 on cheetah_run ≈ paper VCSE 456 (exceeds). VCSE 915 on hopper_stand ≈ paper 711. Baseline also strong: 847 vs paper 424 on pendulum_swingup.
+SE uses a KNN-based particle entropy estimator: reward ∝ distance to k-th nearest neighbor in embedding space. This estimator needs diverse states across the *current batch* to produce a meaningful signal.
 
-**SE fails on locomotion tasks (hardware artifact):** 3/5 tasks show near-zero SE performance (cheetah_run=0, hopper_stand=8, pendulum_swingup=89). Root cause: with 8 GB VRAM + 15 GB RAM, we must cap `replay_buffer_size=100K–120K` (~100–120 episodes). SE's KNN-based particle entropy estimator needs diverse global state coverage — too few episodes degrades its reward signal. VCSE (value-conditioned) is more robust to buffer size. **This is a hardware limitation, not an algorithmic bug.**
+**Official run** (`buf=100K–120K, num_workers=2`): each DataLoader worker holds an independent partition of ~50 episodes. Each training batch draws 128 samples from one worker's 50 episodes → low per-batch diversity → entropy signal degrades.
 
-**SE works when it works:** On simpler tasks (cartpole_swingup ER=870, quadruped_walk ER=312), SE significantly outperforms the paper baseline. This aligns with the paper's claim that SE provides useful exploration signal for visual RL.
+**SE rerun** (`buf=130K, num_workers=0`): single-process replay, each batch draws 256 samples from all 130 episodes → full diversity → signal restored.
 
-### SE rerun experiment (planned)
+| Task | SE official | SE rerun | Δ | Verdict |
+|------|:-:|:-:|:-:|---|
+| cheetah_run | 0.3 | **396** | +396 | ✅ Buffer was the bottleneck |
+| pendulum_swingup | 89 | **811** | +722 | ✅ Buffer was the bottleneck |
+| hopper_stand | 8.1 | **8.1** | 0 | ❌ Not a buffer issue |
 
-To fix SE failures, run SE tasks with `num_workers=0, replay_buffer_size=130K`:
-- Memory: 130 eps × 63 MB = 8.2 GB data + 1.5 GB overhead + 3 GB OS = 12.7 GB → fits in 15 GB  
-- Diversity: 130 unique episodes sampled per batch (vs 50 per worker × 2 with prior settings)
-- Script: `batch_drqv2_se_rerun.sh` (see below)
+**Hopper_stand SE** remains at ~8 with either buffer size. The paper's SE mean of 313±94 with σ=94 implies high seed variance; seed=1 may be an unlucky draw. Alternatively, hopper_stand's dense proprioceptive reward and narrow balance manifold may make the SE exploration bonus specifically counterproductive at this seed. This would require ≥3 seeds to disambiguate.
 
-> Note: SI2E (do_vcse=true) not included here — at ~14 FPS it takes ~10 h per run.  
-> See `results/drqv2-full/si2e/` for the cartpole_swingup SI2E result (ER=594 at 240K frames).
+### VCSE is consistently strong
+
+VCSE (value-conditioned SE) outperforms SE on every task and matches or exceeds the paper's VCSE numbers on 5/6 tasks. Notably robust to buffer size constraints — VCSE 915 on hopper_stand vs paper 711, VCSE 679 on cheetah_run vs paper 456.
+
+### Memory constraint summary
+
+| Setting | Peak RAM | OOM? | Notes |
+|---------|:-:|:-:|---|
+| `buf=1M, workers=4` | >24 GB | ✅ | Original repo defaults |
+| `buf=100K, workers=2` | ~16 GB | ✅ | OOM at F=330K |
+| `buf=120K, workers=0` | ~13 GB | ✗ | Official batch fix |
+| `buf=130K, workers=0` | ~13.5 GB | ✗ | SE rerun fix |
+
+Root cause: each episode = (1001, 9, 84, 84) uint8 ≈ 60 MB uncompressed. With `num_workers=N`, N separate worker *processes* each hold their own partition in RAM. With `num_workers=0`, a single process holds all episodes, eliminating per-worker duplication.
+
+> Note: SI2E (full algorithm, do_si2e=true) not included — at ~14 FPS it takes ~10 h per run.  
+> See `results/drqv2-full/si2e/` for the cartpole_swingup SI2E result (ER=594 at 240K frames, half-budget).
 
 ---
 

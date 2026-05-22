@@ -231,3 +231,5 @@ PID                  48683
 Est. duration        ~1.5h (95 FPS)
 Step-0 ER            390.1241
 
+[14:55:53] DONE:  cartpole_balance / VCSE / seed=1  ER=995.6  →  /workspace/learn-si2e/results/drqv2-official/cartpole_balance_vcse_seed1
+[14:55:53] === ALL DONE ===
