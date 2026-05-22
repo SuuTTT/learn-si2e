@@ -103,13 +103,15 @@ for seed in "${SEEDS[@]}"; do
 done
 
 # ── SE (kNN entropy reward) ────────────────────────────────────────────────
+# beta=0.005 matches the paper's run_sent.sh (default beta=1e-05 is ~500x too small)
 for seed in "${SEEDS[@]}"; do
-    run_and_eval "se" "$seed" "--use_entropy_reward"
+    run_and_eval "se" "$seed" "--use_entropy_reward --beta 0.005"
 done
 
 # ── VCSE (value-conditioned kNN entropy) ─────────────────────────────────
+# beta=0.005 matches the paper's run_vcse.sh
 for seed in "${SEEDS[@]}"; do
-    run_and_eval "vcse" "$seed" "--use_entropy_reward --use_value_condition"
+    run_and_eval "vcse" "$seed" "--use_entropy_reward --use_value_condition --beta 0.005"
 done
 
 # ── Summary ───────────────────────────────────────────────────────────────
