@@ -13,7 +13,9 @@
 #   success rates  → results/a2c-multiseed/summary.csv
 #
 # Paper targets (10 seeds, DoorKey-8x8):
-#   baseline: — (0%)    SE: 72.60 ± 20.32%    VCSE: 94.32 ± 11.09%
+#   baseline: — (0%)    SE: 72.60 ± 20.32%    VCSE: 94.32 ± 11.09%    SI2E: 98.58 ± 3.11%
+# NOTE: what was labeled 'vcse' in this script is actually SI2E (PartitionTree H₂).
+#       Original VCSE (kNN, Kim et al.) runs are in batch_vcse_original.sh.
 
 set -e
 
@@ -108,11 +110,17 @@ for seed in "${SEEDS[@]}"; do
     run_and_eval "se" "$seed" "--use_entropy_reward --beta 0.005"
 done
 
-# ── VCSE (value-conditioned kNN entropy) ─────────────────────────────────
-# beta=0.005 matches the paper's run_vcse.sh
+# ── SI2E (structural entropy H₂ via PartitionTree + value conditioning) ────
+# Labeled 'vcse' in run_si2e.sh but is SI2E's proposed method, NOT Kim et al. VCSE.
+# beta=0.005 matches the paper's run_si2e.sh
+# NOTE: model names on disk remain 'multiseed-vcse-s*' for seeds already trained;
+#       the method label in summary.csv is fixed to 'si2e' by the cleanup below.
 for seed in "${SEEDS[@]}"; do
-    run_and_eval "vcse" "$seed" "--use_entropy_reward --use_value_condition --beta 0.005"
+    run_and_eval "si2e" "$seed" "--use_entropy_reward --use_value_condition --beta 0.005"
 done
+
+# Fix any rows written with old 'vcse' label (e.g. s4/s5 started before rename)
+sed -i 's/^vcse,/si2e,/' "$SUMMARY"
 
 # ── Summary ───────────────────────────────────────────────────────────────
 echo ""
@@ -142,8 +150,8 @@ with open(summary_path) as f:
             pass
 
 print(f"{'Method':<12} {'N':>3}  {'Mean SR':>8}  {'Std SR':>8}  {'Paper SR':>14}")
-paper = {"baseline": "— (0%)", "se": "72.60 ± 20.32", "vcse": "94.32 ± 11.09"}
-for method in ["baseline", "se", "vcse"]:
+paper = {"baseline": "— (0%)", "se": "72.60 ± 20.32", "vcse": "94.32 ± 11.09", "si2e": "98.58 ± 3.11"}
+for method in ["baseline", "se", "vcse", "si2e"]:
     vals = data[method]
     if vals:
         mean = sum(vals) / len(vals)
