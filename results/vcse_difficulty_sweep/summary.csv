@@ -1,0 +1,8 @@
+task,seed,frames,success_rate_pct,mean_return
+KeyCorridorS3R2,1,1000000,0.00,0.0000
+KeyCorridorS3R3,1,1000000,0.00,0.0000
+KeyCorridorS4R3,1,1000000,0.00,0.0000
+KeyCorridorS5R3,1,1000000,0.00,0.0000
+KeyCorridorS6R3,1,1000000,0.00,0.0000
+BlockedUnlockPickup,1,1000000,0.00,0.0000
+MultiRoom-N6,1,1000000,0.00,0.0000

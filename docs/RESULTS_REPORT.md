@@ -1,6 +1,6 @@
 # Local Reproduction Report — SI2E (NeurIPS 2024)
 
-**Last updated:** 2026-05-22  
+**Last updated:** 2026-05-24  
 **Hardware:** RTX 3070 Laptop GPU (8 GB VRAM), 15 GB RAM, 16 cores @ ~3 GHz  
 **Paper hardware:** RTX A1000 (16 GB), 8× Intel Core i9 @ 3.00 GHz  
 **Paper:** "Effective Exploration Based on the Structural Information Principles" (SI2E, NeurIPS 2024)  
