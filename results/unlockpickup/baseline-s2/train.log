@@ -1,0 +1,326 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+/workspace/learn-si2e/SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/scripts/train.py --algo a2c --env MiniGrid-UnlockPickup-v0 --model up-baseline-s2 --frames 3000000 --use_batch --save-interval 100 --log-interval 500 --seed 2
+
+Namespace(algo='a2c', env='MiniGrid-UnlockPickup-v0', model='up-baseline-s2', seed=2, log_interval=500, save_interval=100, procs=16, frames=3000000, epochs=4, batch_size=256, frames_per_proc=None, discount=0.99, lr=0.001, gae_lambda=0.95, entropy_coef=0.01, value_loss_coef=0.5, max_grad_norm=0.5, optim_eps=1e-08, optim_alpha=0.99, clip_eps=0.2, recurrence=1, text=False, use_entropy_reward=False, use_value_condition=False, beta=1e-05, use_batch=True, ablation=None, mem=False)
+
+Device: cuda:0
+
+Environments loaded
+
+Training status loaded
+
+Observations preprocessor loaded
+Model loaded
+
+ACModel(
+  (image_conv): Sequential(
+    (0): Conv2d(3, 16, kernel_size=(2, 2), stride=(1, 1))
+    (1): ReLU()
+    (2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+    (3): Conv2d(16, 32, kernel_size=(2, 2), stride=(1, 1))
+    (4): ReLU()
+    (5): Conv2d(32, 64, kernel_size=(2, 2), stride=(1, 1))
+    (6): ReLU()
+  )
+  (actor): Sequential(
+    (0): Linear(in_features=64, out_features=64, bias=True)
+    (1): Tanh()
+    (2): Linear(in_features=64, out_features=7, bias=True)
+  )
+  (critic): Sequential(
+    (0): Linear(in_features=64, out_features=64, bias=True)
+    (1): Tanh()
+    (2): Linear(in_features=64, out_features=1, bias=True)
+  )
+  (extr_critic): Sequential(
+    (0): Linear(in_features=64, out_features=64, bias=True)
+    (1): Tanh()
+    (2): Linear(in_features=64, out_features=1, bias=True)
+  )
+)
+
+Optimizer loaded
+
+Status saved
+Status saved
+Status saved
+Status saved
+U 500 | F 064000 | FPS 2186 | D 29 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V -0.004 | pL 0.000 | vL 0.000 | ∇ 0.001
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 1000 | F 128000 | FPS 2165 | D 57 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 1500 | F 192000 | FPS 2084 | D 85 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.001 | pL -0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 2000 | F 256000 | FPS 2106 | D 114 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL -0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 2500 | F 320000 | FPS 2033 | D 142 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V -0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 3000 | F 384000 | FPS 2283 | D 170 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 3500 | F 448000 | FPS 2295 | D 200 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V -0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 4000 | F 512000 | FPS 1743 | D 229 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V -0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 4500 | F 576000 | FPS 2323 | D 257 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL -0.000 | vL 0.000 | ∇ 0.001
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 5000 | F 640000 | FPS 2093 | D 286 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 5500 | F 704000 | FPS 1711 | D 314 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 6000 | F 768000 | FPS 2211 | D 343 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 6500 | F 832000 | FPS 2177 | D 371 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V -0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 7000 | F 896000 | FPS 2403 | D 400 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V -0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 7500 | F 960000 | FPS 2457 | D 428 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 8000 | F 1024000 | FPS 2268 | D 456 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 8500 | F 1088000 | FPS 2196 | D 484 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 9000 | F 1152000 | FPS 2420 | D 513 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 9500 | F 1216000 | FPS 2115 | D 541 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 10000 | F 1280000 | FPS 1811 | D 570 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V -0.003 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 10500 | F 1344000 | FPS 2071 | D 599 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 11000 | F 1408000 | FPS 2822 | D 627 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 11500 | F 1472000 | FPS 2743 | D 655 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 12000 | F 1536000 | FPS 2288 | D 683 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 12500 | F 1600000 | FPS 2253 | D 712 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 13000 | F 1664000 | FPS 2148 | D 740 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 13500 | F 1728000 | FPS 1918 | D 768 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V -0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 14000 | F 1792000 | FPS 2051 | D 796 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 14500 | F 1856000 | FPS 2518 | D 825 | rR:μσmM 0.01 0.04 0.00 0.16 | F:μσmM 286.8 4.8 268.0 288.0 | H 1.946 | V -0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 15000 | F 1920000 | FPS 2906 | D 853 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 15500 | F 1984000 | FPS 2087 | D 881 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 16000 | F 2048000 | FPS 2311 | D 909 | rR:μσmM 0.02 0.06 0.00 0.26 | F:μσmM 284.8 12.3 237.0 288.0 | H 1.946 | V -0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 16500 | F 2112000 | FPS 2536 | D 937 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 17000 | F 2176000 | FPS 2077 | D 966 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 17500 | F 2240000 | FPS 2188 | D 994 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 18000 | F 2304000 | FPS 2114 | D 1022 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 18500 | F 2368000 | FPS 2177 | D 1050 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 19000 | F 2432000 | FPS 1870 | D 1078 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 19500 | F 2496000 | FPS 2701 | D 1107 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 20000 | F 2560000 | FPS 2377 | D 1136 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 20500 | F 2624000 | FPS 2608 | D 1165 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 21000 | F 2688000 | FPS 1614 | D 1193 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 21500 | F 2752000 | FPS 1981 | D 1222 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 22000 | F 2816000 | FPS 2578 | D 1253 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 22500 | F 2880000 | FPS 2575 | D 1282 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 23000 | F 2944000 | FPS 2413 | D 1311 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.946 | V 0.000 | pL 0.000 | vL 0.000 | ∇ 0.000
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved

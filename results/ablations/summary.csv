@@ -1,2 +1,7 @@
 ablation,seed,success_rate_pct,mean_return,frames
 no_cluster,1,0.00,0.0000,960000
+no_cluster,2,0.00,0.0000,960000
+no_cluster,3,0.00,0.0000,960000
+no_norm,1,0.00,0.0000,960000
+no_norm,2,66.50,0.6487,960000
+no_norm,3,0.00,0.0000,960000
