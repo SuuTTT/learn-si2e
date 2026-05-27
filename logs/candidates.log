@@ -12779,3 +12779,60 @@ Status saved
 Status saved
 Status saved
 Status saved
+U 21500 | F 2752000 | FPS 0381 | D 7169 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.777 | V -0.301 | pL -0.002 | vL 0.003 | ∇ 0.016
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 22000 | F 2816000 | FPS 0240 | D 7338 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.760 | V -0.292 | pL -0.013 | vL 0.001 | ∇ 0.012
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 22500 | F 2880000 | FPS 0399 | D 7503 | rR:μσmM 0.02 0.06 0.00 0.25 | F:μσmM 284.9 11.9 239.0 288.0 | H 1.794 | V -0.291 | pL -0.013 | vL 0.001 | ∇ 0.014
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+U 23000 | F 2944000 | FPS 0367 | D 7672 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 288.0 0.0 288.0 288.0 | H 1.765 | V -0.308 | pL -0.003 | vL 0.002 | ∇ 0.011
+Status saved
+Status saved
+Status saved
+Status saved
+Status saved
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+Episodes evaluated: 208
+Successes:          0
+Success rate:       0.0%
+Mean return:        0.0000
+SUCCESS_RATE=0.00
+[DONE] up-si2e-s3: success_rate=0.00%
+
+============================================================
+UnlockPickup SUMMARY
+============================================================
+method,seed,success_rate_pct,mean_return,frames
+baseline,1,0.00,0.0000,2944000
+baseline,2,0.00,0.0000,2944000
+baseline,3,0.00,0.0000,2944000
+se,1,0.00,0.0000,2944000
+se,2,0.00,0.0000,2944000
+se,3,0.00,0.0000,2944000
+vcse,1,0.00,0.0000,2944000
+vcse,2,0.00,0.0000,2944000
+vcse,3,0.00,0.0000,2944000
+si2e,1,0.00,0.0000,2944000
+si2e,2,0.00,0.0000,2944000
+si2e,3,0.00,0.0000,2944000
+Method       | Seeds | Mean SR%  | Std
+-------------|-------|-----------|-----
+baseline     |     3 |      0.00 | 0.00
+se           |     3 |      0.00 | 0.00
+vcse         |     3 |      0.00 | 0.00
+si2e         |     3 |      0.00 | 0.00
