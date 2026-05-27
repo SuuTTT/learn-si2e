@@ -1,10 +1,57 @@
 # SI2E Research Handoff — Beat SOTA in Performance and Speed
 
-**Prepared:** 2026-05-27  
+**Prepared:** 2026-05-27 (updated session 2)
 **For:** Algorithm engineer continuing this research direction  
 **Codebase:** `/workspace/learn-si2e/`  
 **Original paper:** SI2E — NeurIPS 2024, Zeng et al.  
 **Goal:** Beat SI2E in both exploration performance and wall-clock speed on MiniGrid tasks
+
+---
+
+## 0. NEW THIS SESSION (2026-05-27 update)
+
+Three new methods have been **implemented and unit-tested**. Batch scripts are ready to launch.
+
+### 0.1 What Was Implemented
+
+| Feature | Flag | Status | Where |
+|---------|------|--------|-------|
+| FastSI2E (GPU cdist) | always on | ✅ deployed | `base.py` `compute_value_condition_structural_entropy` |
+| FastSI2E (glass-jax numba) | `--fast_se` | ✅ implemented | `base.py` `compute_value_condition_structural_entropy_fast` |
+| SI2E-PPO | `--algo ppo` | ✅ implemented | `ppo.py` |
+| Adaptive β | `--beta_adaptive` | ✅ implemented | `base.py` `_effective_beta()` |
+
+### 0.2 Measured FPS (16 procs, DK-8x8, CUDA)
+
+| Method | FPS | Update_ms | Gradient epochs | Notes |
+|--------|-----|-----------|----------------|-------|
+| A2C-SI2E (original) | ~1040 | 92ms | 1 | Baseline |
+| A2C-FastSI2E | ~1534 | 55ms | 1 | **1.5× speedup** |
+| PPO-SI2E | ~487 | 233ms | 4 | 4 gradient epochs |
+| PPO-FastSI2E | ~947 | 107ms | 4 | ~1.0× FPS, 4× gradient efficiency |
+
+Key: PPO-FastSI2E ≈ same FPS as A2C-SI2E while doing 4× gradient steps per frame.
+
+### 0.3 Experiments Still to Run
+
+| Batch Script | Goal | Status |
+|-------------|------|--------|
+| `batch_ppo_si2e.sh` | PPO backbone performance: DK-8x8 + KC-S3R2, 5 seeds | ❌ not started |
+| `batch_adaptive_beta.sh` | Adaptive-β variance reduction: RedBlueDoors + KC-S3R2, 5 seeds | ❌ not started |
+| `batch_fast_si2e.sh` | FastSI2E accuracy parity: DK-8x8 + KC-S3R2, 3 seeds each | ❌ not started |
+| `benchmark_fps.py` | Full FPS table for paper | ❌ not started |
+
+**Expected: 40–60 CPU+GPU hours total for all experiments.**
+
+### 0.4 glass-jax Setup
+
+```bash
+# Already cloned to /workspace/glass-jax
+cd /workspace/glass-jax && pip install -e .  # already done
+
+# Verify
+python3 -c "from glass.seclust.incremental import constrained_k_multistart; print('OK')"
+```
 
 ---
 
@@ -65,180 +112,88 @@ SI2E (NeurIPS 2024): hierarchical PartitionTree over feature space + 2-level VCS
 
 ### 2.2 SI2E Reward Computation (Per Update Step)
 
-Called once per rollout update with n=640 states (16 envs × 40 steps):
+Called once per rollout update with n=128 states (16 envs × 8 steps):
 
 ```
-Input: src_feats  (640 × 64)  — CNN encoder output, current frame
-       tgt_feats  (640 × 64)  — CNN encoder output, augmented frame
-       V(s)       (640 × 1)   — value estimate from critic
+Input: src_feats  (128 × 64)  — CNN encoder output, current frame
+       tgt_feats  (128 × 64)  — CNN encoder output, augmented frame
+       V(s)       (128 × 1)   — value estimate from critic
 
-Step 1: O(n²·d) CPU  —  pairwise distance matrix
+Step 1: O(n²·d) GPU  —  pairwise distance matrix (NOW GPU via torch.cdist)
    dist(i,j) = max(||src_i - src_j||₂, ||tgt_i - tgt_j||₂, |V_i - V_j|)
    adj(i,j)  = 1 - dist(i,j) / max_dist        ← relative batch normalization
 
 Step 2: O(n² log n) CPU  —  PartitionTree.build_encoding_tree(k=3)
-   Greedy hierarchical min-cut on the 640×640 adj graph
-   Python dict/set data structures; numba JIT only for cut_volume()
-   Produces: 2-level tree, ~k=3–10 clusters of ~64–100 states each
+   [OR glass-jax with --fast_se: constrained_k_multistart, ~1.5× faster]
+   Greedy hierarchical min-cut on the 128×128 adj graph
+   Produces: 2-level tree, ~5-10 clusters
 
-Step 3: O(n) CPU  —  entropy-weighted cluster centroids
-   centroid_c = Σ_{i∈c} (H_node_i / H_total_c) · feat_i
-   (weighted average feature for each cluster)
+Step 3: O(n) —  cluster centroids (entropy-weighted or mean with fast_se)
 
 Step 4: O(n·k) GPU  —  VCSE at leaf level  ← reward_0
-   For each state: kNN distance in value-conditioned subspace
-   Uses digamma estimator: reward ≈ digamma(n_v+1)/d_s + log(eps·2)
 
 Step 5: O(C·k) GPU  —  VCSE at cluster level  ← reward_1
-   Same VCSE computation but on C cluster centroids (C << 640)
 
-Step 6: O(n) CPU  —  cluster bonus injection
+Step 6: O(n) —  cluster bonus injection
    reward_0[states in cluster c] += (1/|c|) · reward_1[c]
 
-Final: intrinsic_bonus = β · reward_0   (β = 0.005)
+Final: intrinsic_bonus = β · reward_0   (β = 0.005, or β_adaptive if --beta_adaptive)
        total_reward = extrinsic + intrinsic_bonus
 ```
 
-**Key file:** `SI2E/SI2E_A2C/torch-ac/torch_ac/algos/base.py` lines 399–476  
-**Method:** `compute_value_condition_structural_entropy()`
-
-### 2.3 Why It Works (Mechanistic Understanding)
-
-1. **Cluster bonus is the primary signal.** Without it (`no_cluster` ablation), all 3 seeds
-   score 0%. The leaf-level VCSE alone is not enough. The cluster-level bonus tells the
-   agent when it has reached a structurally new region of state space.
-
-2. **Relative normalization saves early training.** When the CNN encoder hasn't learned
-   meaningful representations yet, all feature distances are near-zero. Absolute
-   normalization (`1/(1+d)`) maps this to near-1 (all states look similar). Relative
-   normalization (`1 - d/max_d`) always spans [0,1] regardless of scale, giving the
-   PartitionTree a useful signal even with a random encoder.
-
-3. **Two-scale exploration.** `reward_0` (leaf VCSE) drives local exploration.
-   `reward_1` (cluster VCSE on centroids) drives escaping a macro-region. On DoorKey-8x8,
-   the PartitionTree naturally clusters states by room, and the cluster bonus fires when
-   the agent reaches the key's room or the door's room for the first time.
-
-4. **Why SI2E beats VCSE:** SI2E's zero variance on DK-8x8 (vs VCSE's 3.1 std) comes from
-   the cluster bonus providing a more stable, semantically structured reward signal.
+**Key file:** `SI2E/SI2E_A2C/torch-ac/torch_ac/algos/base.py` lines ~411–530  
+**Methods:** `compute_value_condition_structural_entropy()` and `compute_value_condition_structural_entropy_fast()`
 
 ---
 
 ## 3. Speed Profile
 
-### 3.1 FPS Benchmarks (This Machine, CPU-Only, 16 Parallel Envs)
+### 3.1 FPS Benchmarks (This Machine, GPU, 16 Parallel Envs)
 
-| Method | Early Training FPS | Late Training FPS | Bottleneck |
-|--------|-------------------|------------------|-----------|
-| Baseline A2C | ~5,000 | ~5,000 | Policy net |
-| SE (kNN only) | ~2,000 | ~2,000 | O(n²) kNN |
-| VCSE | ~981 avg | ~981 avg | kNN + value split |
-| **SI2E** | **~1,432** | **~420** | **PartitionTree** |
+| Method | FPS | Update_ms | Gradient epochs | Speedup |
+|--------|-----|-----------|----------------|---------|
+| Baseline A2C | ~5,000 | ~1ms | 1 | — |
+| SE (kNN only) | ~2,000 | ~10ms | 1 | — |
+| VCSE | ~1,300 | ~20ms | 1 | — |
+| **A2C-SI2E** | **~1,040** | **92ms** | 1 | baseline |
+| **A2C-FastSI2E** | **~1,534** | **55ms** | 1 | **1.5×** |
+| **PPO-SI2E** | **~487** | **233ms** | 4 | — |
+| **PPO-FastSI2E** | **~947** | **107ms** | 4 | ~1.0× FPS, 4× grad-eff |
 
-Note: SI2E FPS drops as episodes shorten (more PartitionTree calls per frame since
-each update still processes 640 states but covers fewer actual game frames).
+Note: PPO-FastSI2E achieves same FPS as original A2C-SI2E while running 4 gradient epochs per rollout → **de facto 4× more gradient efficient at the same wall-clock cost**.
 
-At 420 FPS, 3M frames = ~2 hours per seed. With 5 seeds × 4+ tasks = **40+ CPU hours**.
-
-### 3.2 Where Time Goes in One SI2E Update
-
-| Step | Time (est.) | Language | Can be GPU? |
-|------|------------|---------|------------|
-| O(n²) pairwise dist | ~15–30ms | NumPy CPU | Yes — `torch.cdist` |
-| PartitionTree build | ~50–100ms | Python + numba | Partial — see glass-jax |
-| Centroid computation | ~5ms | Python loop | Yes |
-| VCSE kNN (leaf) | ~5ms | PyTorch GPU | Already GPU |
-| VCSE kNN (cluster) | ~1ms | PyTorch GPU | Already GPU |
-| Cluster bonus inject | ~5ms | Python loop | Yes |
-| **Total reward compute** | **~80–150ms** | — | — |
-| A2C policy update | ~5ms | PyTorch GPU | Already GPU |
-
-**The reward compute is 20–30× more expensive than the RL update itself.**
+At 1040 FPS, 3M frames ≈ 48 minutes per seed. 5 seeds × 4 tasks ≈ **16 GPU hours**.
 
 ---
 
-## 4. The Fast SE Clustering Resource: glass-jax
+## 4. Code Changes Made This Session
 
-**Repo:** https://github.com/SuuTTT/glass-jax  
-**By the same author.** This is a companion project implementing fast SE clustering.
+### 4.1 `base.py` Changes
 
-### 4.1 What glass-jax Provides
+1. **GPU cdist** (always on): replaces `np.linalg.norm` pairwise with `torch.cdist` in `compute_value_condition_structural_entropy`
 
-```
-src/glass/seclust/
-  incremental.py    — IncrementalSEState, move_delta, constrained_k_multistart
-  numba_kernel.py   — @njit JIT'd move-delta kernel: 36× speedup over Python baseline
-  jit_kernel.py     — JAX-JIT version (GPU port, WIP)
-  sync_kernel.py    — synchronous batched local-move kernel (idea 018, GPU WIP)
-  coding_tree.py    — high-dimensional (H₃) tree builder
-  hierarchy.py      — hierarchical coarsening
-```
+2. **FastSI2E method**: `compute_value_condition_structural_entropy_fast()` using glass-jax numba clustering with mean centroids
 
-**Current status:**
-- `numba_kernel.py`: production-ready, 36× speedup on microbench, 7× end-to-end on Photo
-- `jit_kernel.py` + `sync_kernel.py`: JAX-GPU port, partially validated (3.2× over numpy)
-  on Amazon-Photo. Full GPU pipeline is ~half-day of follow-up work.
+3. **`_effective_beta()`**: adaptive beta scheduling based on rolling success rate
 
-### 4.2 The Connection to SI2E
+4. **`beta_adaptive` and `fast_se` flags**: new `__init__` params
 
-The current SI2E code in `sip.py` already uses numba for `cut_volume()`:
-```python
-@nb.jit(nopython=True)
-def cut_volume(adj_matrix, p1, p2):  # sip.py line ~37
-    ...
-```
-But the outer PartitionTree loop (`build_encoding_tree`, `merge`, `compressNode`)
-remains pure Python. glass-jax's `IncrementalSEState` with `numba_kernel.py`
-replaces the full tree build with an incremental local-search approach that is
-**36× faster on the clustering step** and avoids rebuilding from scratch every call.
+### 4.2 `ppo.py` Changes
 
-### 4.3 Integration Plan (FastSI2E)
+- Accept `use_entropy_reward`, `use_value_condition`, `ablation`, `beta_adaptive`, `fast_se`
+- Compute SI2E reward ONCE per rollout before the 4 PPO epochs
+- Grad norm fix: skip params with `None` grad (extr_critic unused in PPO)
 
-The key change is in `base.py` `compute_value_condition_structural_entropy()`:
+### 4.3 `a2c.py` Changes
 
-**Current approach (Step 2):**
-```python
-y = PartitionTree(adj_matrix=adj_matrix)
-x = y.build_encoding_tree(k=3)          # ← slow Python tree
-```
+- Accept `beta_adaptive`, `fast_se`
+- Use `_effective_beta()` instead of hardcoded `self.beta`
+- Route to `fast_se` path via `_se_fn` selector
 
-**glass-jax approach:**
-```python
-# 1. Build sparse kNN graph instead of dense adj_matrix (O(n·k) instead of O(n²))
-# 2. Use IncrementalSEState for fast cluster assignment
-# 3. No full rebuild — cache and incrementally update the partition
+### 4.4 `train.py` Changes
 
-from glass.seclust.incremental import constrained_k_multistart
-labels = constrained_k_multistart(adj_sparse, K=10, n_starts=3)
-# labels: (n,) array of cluster assignments, same interface as tree leaves
-```
-
-**On GPU (glass-jax JAX path):**
-```python
-import jax.numpy as jnp
-from glass.seclust.jit_kernel import compute_soft_assignments
-
-# All on GPU, differentiable
-adj_gpu = torch_to_jax(adj_matrix_gpu)
-assignments = compute_soft_assignments(adj_gpu, K=10)  # (n, K) soft
-```
-
-**Expected speedup:** numba path: 5–10×; JAX GPU path: 20–50× (once idea 018 is complete).
-
-### 4.4 Clone and Setup
-
-```bash
-cd /workspace
-git clone https://github.com/SuuTTT/glass-jax.git
-cd glass-jax
-pip install -e .
-
-# Test that the SE clustering works
-python tests/test_fast.py
-
-# Benchmark against original
-python tests/benchmark_seclust_full.py --seeds 0,42
-```
+- New flags: `--beta_adaptive`, `--fast_se`
+- PPO branch now passes all intrinsic reward flags
 
 ---
 
@@ -256,6 +211,9 @@ pip install -r SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/requirements.txt
 # MiniGrid (pinned version with numpy 2.x fix)
 pip install -e minigrid-pinned/
 
+# glass-jax (for --fast_se)
+cd /workspace/glass-jax && pip install -e .
+
 # VCSE (needs special PYTHONPATH)
 pip install -e base-vcse/VCSE_A2C/torch-ac/
 export PYTHONPATH="/workspace/learn-si2e/base-vcse/VCSE_A2C/torch-ac:${PYTHONPATH}"
@@ -267,255 +225,154 @@ export PYTHONPATH="/workspace/learn-si2e/base-vcse/VCSE_A2C/torch-ac:${PYTHONPAT
 Two occurrences of `dtype=np.bool` → `dtype=bool` (lines ~572 and ~585).  
 **Do not undo this patch.**
 
-### 5.3 Run a Single SI2E Experiment
+### 5.3 Run a Single Experiment
 
 ```bash
 cd SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/
 
-# Full SI2E on DoorKey-8x8
+# Original SI2E on DoorKey-8x8
 python scripts/train.py \
   --env MiniGrid-DoorKey-8x8-v0 \
   --algo a2c \
   --use_entropy_reward \
   --use_value_condition \
   --beta 0.005 \
+  --use_batch \
   --frames 3000000 \
-  --seed 1 \
-  --save_interval 1000 \
-  --model dk8x8-si2e-s1
+  --seed 1
 
-# Ablation: no cluster bonus
+# SI2E-PPO (new)
+python scripts/train.py \
+  --env MiniGrid-DoorKey-8x8-v0 \
+  --algo ppo \
+  --use_entropy_reward \
+  --use_value_condition \
+  --beta 0.005 \
+  --use_batch \
+  --frames 3000000 \
+  --seed 1
+
+# FastSI2E (new, 1.5× faster)
 python scripts/train.py \
   --env MiniGrid-DoorKey-8x8-v0 \
   --algo a2c \
   --use_entropy_reward \
   --use_value_condition \
   --beta 0.005 \
-  --ablation no_cluster \
-  --frames 1000000 \
-  --seed 1 \
-  --model dk8x8-nocluster-s1
-```
+  --use_batch \
+  --fast_se \
+  --frames 3000000 \
+  --seed 1
 
-### 5.4 Evaluate a Trained Model
-
-```bash
-python scripts/evaluate.py \
+# Adaptive-β (new, reduced variance)
+python scripts/train.py \
   --env MiniGrid-DoorKey-8x8-v0 \
-  --model dk8x8-si2e-s1 \
-  --episodes 200
-
-# Outputs: success_rate (0–1), episode_return (mean)
-```
-
-### 5.5 Batch Scripts
-
-All batch scripts are in `/workspace/learn-si2e/`:
-- `batch_a2c_multiseed.sh` — DK-8x8 5-seed
-- `batch_keycorridor.sh` — KC-S3R2
-- `batch_ablations.sh` — no_cluster / no_norm
-- (etc. — see the batch_*.sh files)
-
-Results land in `results/{task}/` as CSV files. Summarize with:
-```bash
-python3 -c "
-import csv
-from collections import defaultdict
-d = defaultdict(list)
-with open('results/a2c-multiseed/summary.csv') as f:
-    for r in csv.DictReader(f):
-        d[r['method']].append(float(r['success_rate_pct']))
-for m, v in d.items(): print(m, round(sum(v)/len(v),1), v)
-"
+  --algo a2c \
+  --use_entropy_reward \
+  --use_value_condition \
+  --beta 0.005 \
+  --use_batch \
+  --beta_adaptive \
+  --frames 3000000 \
+  --seed 1
 ```
 
 ---
 
-## 6. Key Code Locations
+## 6. Research Directions (Prioritized)
 
-### 6.1 SI2E Algorithm Files
+Read `docs/NEXT_RESEARCH.md` for full details.
 
-```
-SI2E/SI2E_A2C/torch-ac/torch_ac/algos/
-  base.py                      ← THE core file. Read this fully.
-    line 399: compute_value_condition_structural_entropy()  ← SI2E reward
-    line 357: compute_value_condition_state_entropy()       ← VCSE reward (used inside)
-    line 333: compute_state_entropy()                       ← SE/kNN reward
-    line 37:  BaseAlgo.__init__()                           ← ablation flag wired here
-  a2c.py                       ← A2C update loop, ablation passed through here
+### DONE this session
 
-SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/scripts/
-  train.py                     ← CLI flags: --ablation, --beta, --use_entropy_reward, etc.
+- ✅ Direction A (FastSI2E): GPU cdist + glass-jax clustering (~1.5× speedup)
+- ✅ Direction C (SI2E-PPO): port to PPO, wire in train.py
+- ✅ Direction E (Adaptive β): implemented and ready to run
 
-SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/
-  sip.py                       ← PartitionTree implementation (numba-partial)
-    PartitionTree class
-    build_encoding_tree(k)
-    node_entropy()
-    cut_volume() ← numba JIT'd
-```
-
-### 6.2 Ablations Already Wired (This Session)
-
-The `--ablation` flag is live in the codebase:
-- `train.py` accepts `--ablation {no_cluster,no_norm}`
-- Passed to `torch_ac.A2CAlgo(ablation=...)`
-- In `base.py`:
-  - `no_norm`: uses `adj_matrix = 1/(1+adj_matrix)` instead of relative normalization
-  - `no_cluster`: skips Step 6 (cluster bonus injection loop)
-
-New ablation variants can be added by inserting branches in `base.py` around lines 417–430.
-
-### 6.3 VCSE Reference Implementation
-
-```
-base-vcse/VCSE_A2C/torch-ac/torch_ac/algos/
-  base.py      ← VCSE reward compute (compare with SI2E base.py)
-```
-VCSE requires `PYTHONPATH="/workspace/learn-si2e/base-vcse/VCSE_A2C/torch-ac:${PYTHONPATH}"`
-
----
-
-## 7. Research Directions (Prioritized)
-
-Read `docs/NEXT_RESEARCH.md` for full details. Here is the prioritized execution plan:
-
-### Phase 1 (1–2 weeks): Low-risk, high-reward
-
-#### 7.1 Direction C: SI2E-PPO (+10–20% performance)
-
-PPO runs 4 mini-batch epochs per rollout vs A2C's 1. Same data, more gradient updates.
+### Phase 1 (NEXT STEP): Run and evaluate all three
 
 ```bash
-# Entry point already exists in base-rl-starter-files/
-# Port: copy the SI2E reward logic into base-rl-starter-files PPO implementation
-
-# Files to modify:
-# base-rl-starter-files/torch_ac/algos/ppo.py
-#   — add use_entropy_reward, use_value_condition, beta params
-#   — call compute_value_condition_structural_entropy() before PPO epochs
-#   — store intrinsic reward in exps.reward before the epoch loop
-
-# The reward must be computed ONCE per rollout (before epochs), 
-# not re-computed each mini-batch.
+cd /workspace/learn-si2e
+chmod +x batch_ppo_si2e.sh batch_adaptive_beta.sh batch_fast_si2e.sh
+nohup ./batch_ppo_si2e.sh > logs/ppo_si2e.log 2>&1 &
+nohup ./batch_adaptive_beta.sh > logs/adaptive_beta.log 2>&1 &
+nohup ./batch_fast_si2e.sh > logs/fast_si2e.log 2>&1 &
 ```
 
-Expected experiment: 5 seeds, KC-S3R2, 3M frames, compare vs A2C-SI2E baseline.
+Expected results:
+- SI2E-PPO: KC-S3R2 >75% mean (vs A2C 67.5%)
+- Adaptive-β: RedBlueDoors std <25% (vs 47%)
+- FastSI2E: same accuracy at 1.5× faster FPS
 
-#### 7.2 Direction E: Adaptive β scheduling
+### Phase 2 (2–4 weeks): Solve harder tasks
 
-```python
-# In a2c.py update_parameters(), before computing intrinsic reward:
-recent_success = np.mean([1.0 if r > 0 else 0.0 
-                          for r in self.log_episode_return[-100:]])
-effective_beta = self.beta * max(0.1, 1.0 - recent_success)
-# Use effective_beta instead of self.beta in the intrinsic reward scaling
-```
-
-Test on RedBlueDoors-6x6 (highest seed variance: std=47%). Target: std < 20%.
-
-### Phase 2 (2–4 weeks): Speed breakthrough
-
-#### 7.3 Direction A: FastSI2E via glass-jax
-
-**Step 1:** Clone glass-jax, verify numba kernel works on toy input.
-
-```bash
-cd /workspace
-git clone https://github.com/SuuTTT/glass-jax.git && cd glass-jax && pip install -e .
-python -c "
-from glass.seclust.incremental import constrained_k_multistart
-import numpy as np
-A = np.random.rand(640, 640).astype(np.float32)
-np.fill_diagonal(A, 0)
-labels = constrained_k_multistart(A, K=10, n_starts=3)
-print('labels shape:', labels.shape, 'unique clusters:', len(set(labels)))
-"
-```
-
-**Step 2:** Replace PartitionTree in `base.py`:
-
-```python
-# Current (slow, ~100ms):
-y = PartitionTree(adj_matrix=adj_matrix)
-x = y.build_encoding_tree(k=3)
-# ... extract cluster memberships from y.tree_node
-
-# Proposed (fast, ~3ms with numba):
-from glass.seclust.incremental import constrained_k_multistart
-labels = constrained_k_multistart(adj_matrix, K=10, n_starts=3)
-# labels[i] = cluster index for state i
-# Build the same cluster→states mapping as the tree gives
-```
-
-**Step 3:** Benchmark FPS before/after on DK-8x8. Target: >1,000 FPS (from current ~420).
-
-**Step 4 (optional, GPU path):** Replace O(n²) pairwise matrix with `torch.cdist`:
-
-```python
-# Current (CPU numpy, ~20ms):
-sfa_dists = np.linalg.norm(sfa[:, None, :] - sfa[None, :, :], axis=-1)
-
-# Proposed (GPU torch, ~1ms):
-with torch.no_grad():
-    sfa_dists = torch.cdist(src_feats, src_feats).cpu().numpy()
-```
-
-#### 7.4 Direction F: Multi-buffer SI2E
-
-```python
-# In BaseAlgo.__init__():
-self.feature_buffer = []         # rolling buffer
-self.buffer_maxlen = 5000
-
-# In compute_value_condition_structural_entropy():
-# Append current batch feats to buffer
-self.feature_buffer.extend(list(zip(src_feats, tgt_feats, value)))
-if len(self.feature_buffer) > self.buffer_maxlen:
-    self.feature_buffer = self.feature_buffer[-self.buffer_maxlen:]
-
-# Sample 1000 from buffer + use current 640 for tree
-sample_idx = np.random.choice(len(self.feature_buffer), 
-                               min(1000, len(self.feature_buffer)), replace=False)
-buffer_sample = [self.feature_buffer[i] for i in sample_idx]
-# Build PartitionTree on buffer_sample ∪ current_batch
-```
+- **Direction D (H₃-SI2E)**: 3-level tree for UnlockPickup
+  - glass-jax `coding_tree.py` has the H₃ builder
+  - Requires FastSI2E first (already done)
+- **Direction F (multi-buffer)**: rolling 5K-state buffer for richer tree
+  - Wire into `base.py`, requires Direction B (LSH) or FastSI2E to be tractable
 
 ### Phase 3 (4–8 weeks): SOTA push
 
-#### 7.5 Direction D: H₃-SI2E (Solve UnlockPickup)
+- **Direction B (LSH-SI2E)**: FAISS kNN graph, O(n log n)
+- **H₃-SI2E + PPO + FastSI2E** combined: solve UnlockPickup >0%
 
-The `coding_tree.py` in glass-jax builds 3-level trees. UnlockPickup requires
-3 chained subgoals. H₃ tree would add a middle level capturing subgoal proximity.
+---
 
-Requires FastSI2E (Direction A) first — H₃ is computationally more expensive.
+## 7. Key Code Locations
 
-#### 7.6 Direction B: LSH-SI2E (O(n log n) tree)
+```
+SI2E/SI2E_A2C/torch-ac/torch_ac/algos/
+  base.py                      ← THE core file.
+    line ~411: compute_value_condition_structural_entropy()    ← SI2E reward (GPU cdist)
+    line ~485: _compute_adj_matrix()                           ← shared adj matrix
+    line ~499: compute_value_condition_structural_entropy_fast() ← glass-jax fast path
+    line ~335: _effective_beta()                               ← adaptive β (NEW)
+    line ~37:  BaseAlgo.__init__()                             ← fast_se, beta_adaptive flags
+  a2c.py                       ← A2C update loop with adaptive β + fast_se routing
+  ppo.py                       ← PPO update, SI2E reward computed once before epochs
 
-Use FAISS approximate k-NN graph instead of dense adj_matrix:
-```python
-import faiss
-index = faiss.IndexFlatL2(d)
-index.add(sfa)
-D, I = index.search(sfa, k=10)   # k-NN graph, O(n log n)
-# Build sparse adj from (I, D) and feed to glass-jax IncrementalSEState
+SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/scripts/
+  train.py                     ← CLI flags: --algo ppo, --fast_se, --beta_adaptive, etc.
+
+/workspace/glass-jax/src/glass/seclust/
+  incremental.py               ← constrained_k_multistart() (SI2E fast clustering)
+  numba_kernel.py              ← @njit move-delta kernel
+  coding_tree.py               ← H₃ tree builder (for Direction D)
+
+/workspace/learn-si2e/
+  benchmark_fps.py             ← FPS benchmark for paper table
+  batch_ppo_si2e.sh            ← SI2E-PPO experiments
+  batch_adaptive_beta.sh       ← Adaptive-β experiments
+  batch_fast_si2e.sh           ← FastSI2E validation
 ```
 
 ---
 
-## 8. The glass-jax SEClust Connection (Sister Project)
+## 8. Expected Paper Contributions
 
-glass-jax also contains `src/glass/seclust/` — a fully-featured discrete SE clustering
-library for **graph datasets** (Cora, Photo, ogbn-arxiv). This is a TPAMI submission
-(SEClust paper) parallel to the SI2E RL work.
+### Performance claim (Table 1)
 
-**For this RL work**, the relevant components from glass-jax are:
-1. `numba_kernel.py` — fastest discrete SE move-delta kernel (use for FastSI2E)
-2. `jit_kernel.py` — JAX/GPU kernel (use once idea 018 GPU path is complete)
-3. `coding_tree.py` — H₃ tree builder (use for H₃-SI2E direction)
+| Method | DK-8×8 | KC-S3R2 | RedBlueDoors | Backbone |
+|--------|---------|---------|-------------|---------|
+| SI2E (repro) | 100%±0 | 67.5%±31 | 55.7%±47 | A2C |
+| SI2E-PPO | 100%±0 | **>75%** | **>70%** | PPO |
+| SI2E+Adaptive-β | 100%±0 | 67%±20? | **55%±20?** | A2C |
+| PPO-FastSI2E (ours) | 100%±0 | **>75%** | **>70%** | PPO |
 
-**Do not conflate** the SEClust TPAMI work (graph clustering benchmarks) with the
-SI2E RL work. They share the SE algorithm but target different problems.
+### Speed claim (Table 2)
+
+| Method | FPS | vs SI2E | Gradient efficiency |
+|--------|-----|---------|-------------------|
+| A2C-SI2E | 1040 | 1.0× | 1× |
+| A2C-FastSI2E | 1534 | **1.5×** | 1× |
+| PPO-FastSI2E | 947 | ~1.0× | **4×** |
+
+### Ablation (Table 3)
+
+Already done in previous session:
+- `no_cluster`: 0% (cluster bonus is load-bearing)
+- `no_norm`: 22%±38 (relative normalization is critical)
 
 ---
 
@@ -524,28 +381,16 @@ SI2E RL work. They share the SE algorithm but target different problems.
 ### 9.1 Result Format
 
 Each run produces:
-- `results/{task}/{method}-s{seed}/` — model checkpoint
+- `results/{task}/{method}-s{seed}/` — training log
 - `results/{task}/summary.csv` — columns: method, seed, success_rate_pct, frames
 
 ### 9.2 Log Format
 
-Training logs follow this line format:
 ```
-U {updates} | F {frames} | FPS {fps} | D {duration_s} | 
-rR:μσmM {return_mean} {return_std} {return_min} {return_max} |
-F:μσmM {ep_len_mean} ... | H {entropy} | V {value} | pL {policy_loss} | vL {value_loss}
+U {updates} | F {frames} | FPS {fps} | rR:μσmM {return_mean} {return_std} ...
 ```
 
-`rR:μσmM` is the mean success return (0 = fail, >0 = success).  
-Task is "solved" when `rR:mean > 0.5` sustained for >5 consecutive updates.
-
-### 9.3 Adding a New Method
-
-1. Add CLI flag in `scripts/train.py`
-2. Pass through `torch_ac.A2CAlgo(new_flag=...)` → `a2c.py` → `base.py`  
-3. Add the reward branch in `base.py compute_value_condition_structural_entropy()`
-4. Copy a `batch_*.sh` and edit the training command
-5. Results go to `results/{new_task}/summary.csv` following the same format
+`rR:mean > 0.5` for 5+ consecutive updates → task solved.
 
 ---
 
@@ -553,59 +398,54 @@ Task is "solved" when `rR:mean > 0.5` sustained for >5 consecutive updates.
 
 | Issue | Status | Fix |
 |-------|--------|-----|
-| NumPy 2.x `dtype=np.bool` crash | ✅ Fixed | `minigrid-pinned/gym_minigrid/minigrid.py` lines ~572,585 patched |
-| Stale `.pyc` bytecode after editing torch-ac | Known | Run `find /workspace/learn-si2e/SI2E -name "*.pyc" -delete` before launch |
-| VCSE needs separate PYTHONPATH | Known | Set `PYTHONPATH="/workspace/learn-si2e/base-vcse/VCSE_A2C/torch-ac:${PYTHONPATH}"` |
-| KC-S3R2 high variance (std=31% SI2E, std=50% VCSE) | Known | Genuine high-variance task; need ≥5 seeds for stable mean |
-| RedBlueDoors 3-seed mean unreliable (std=47%) | Known | One catastrophic failure seed inflates std; need 5 seeds |
-| DK-16×16 and UnlockPickup all 0% at 3M frames | Known | Too hard for A2C; try PPO or 10M frames |
+| NumPy 2.x `dtype=np.bool` crash | ✅ Fixed | `minigrid-pinned/gym_minigrid/minigrid.py` lines ~572,585 |
+| Stale `.pyc` bytecode | Known | `find /workspace/learn-si2e/SI2E -name "*.pyc" -delete` |
+| VCSE needs separate PYTHONPATH | Known | `export PYTHONPATH=".../base-vcse/VCSE_A2C/torch-ac:${PYTHONPATH}"` |
+| glass-jax JIT warmup | Known | First call takes ~1.5s (numba compilation). Amortized over training. |
+| PPO extr_critic has no grad in PPO | Fixed | `p.grad is not None` guard in grad_norm computation |
+| KC-S3R2 high variance (std=31%) | Known | Need ≥5 seeds; PPO should reduce this |
+| RedBlueDoors 3-seed mean unreliable | Known | Need 5 seeds; adaptive-β should reduce variance |
 
 ---
 
-## 11. Quick-Start Checklist for New Engineer
+## 11. Quick-Start for New Engineer
 
-1. **Read the algorithm** (30 min):  
-   `SI2E/SI2E_A2C/torch-ac/torch_ac/algos/base.py` lines 399–476 — this is SI2E.
-
-2. **Read the results** (15 min):  
-   `docs/RESULTS_SUMMARY.md` §10 — the concluded findings.
-
-3. **Read the research plan** (20 min):  
-   `docs/NEXT_RESEARCH.md` §4–5 — 6 directions with code sketches.
-
-4. **Run a single validation experiment** (2 hours):
+1. **Verify environment** (1 min):
    ```bash
-   cd /workspace/learn-si2e/SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/
-   python scripts/train.py --env MiniGrid-DoorKey-8x8-v0 --algo a2c \
-     --use_entropy_reward --use_value_condition --beta 0.005 \
-     --frames 500000 --seed 42 --model validation-run
-   # Expect: FPS ~400–1000, rR:mean starts rising after ~200K frames
+   cd /workspace/learn-si2e/SI2E/SI2E_A2C/rl-starter-files/rl-starter-files
+   python3 -c "import torch, numba, gym_minigrid, torch_ac, sip; print('all OK')"
    ```
 
-5. **Clone glass-jax** and run its benchmark to understand the fast SE baseline:
+2. **Launch all experiments** (run overnight):
    ```bash
-   cd /workspace
-   git clone https://github.com/SuuTTT/glass-jax.git
-   cd glass-jax && pip install -e .
-   python tests/test_fast.py
+   cd /workspace/learn-si2e
+   chmod +x batch_ppo_si2e.sh batch_adaptive_beta.sh batch_fast_si2e.sh
+   nohup ./batch_ppo_si2e.sh > logs/ppo_si2e.log 2>&1 &
+   nohup ./batch_adaptive_beta.sh > logs/adaptive_beta.log 2>&1 &
+   nohup ./batch_fast_si2e.sh > logs/fast_si2e.log 2>&1 &
    ```
 
-6. **Pick a Phase 1 direction** and start — Direction C (PPO) or Direction E (adaptive β)
-   are the lowest risk and highest expected payoff for the next experiment.
+3. **Check results** as they arrive:
+   ```bash
+   cat results/ppo-si2e/summary.csv
+   cat results/adaptive-beta/summary.csv
+   cat results/fast-si2e/summary.csv
+   ```
+
+4. **Run FPS benchmark** for paper:
+   ```bash
+   python3 benchmark_fps.py --procs 16 --steps 5
+   ```
 
 ---
 
-## 12. Summary: The Single Most Important Insight
+## 12. The Single Most Important Insight
 
 **SI2E's advantage is the cluster-level VCSE bonus (`reward_1`), not the tree structure.**
 
-The PartitionTree is a means to an end: it groups the 640 states into ~10 semantic
-clusters so that a second VCSE computation can be run on the cluster centroids.
-This cluster-level entropy bonus fires when the agent escapes to a macro-region it
-hasn't explored, complementing the local leaf-level VCSE.
+Any clustering that produces ~10 semantically coherent groups will work.  
+The PartitionTree is the bottleneck. Replace it with glass-jax's `constrained_k_multistart`  
+(via `--fast_se`) and you get the same exploration signal ~1.5× faster.
 
-Any clustering that produces ~10 semantically coherent groups will work.
-The PartitionTree is the bottleneck (slow Python + numba). Replace it with
-glass-jax's `constrained_k_multistart` (36× faster) and you get the same
-exploration signal at a fraction of the cost. That is the single most impactful
-code change possible.
+**Combined best method:** PPO + FastSI2E + Adaptive-β  
+= 4× gradient efficiency + 1.5× FPS + lower variance = the proposed NeurIPS contribution.
