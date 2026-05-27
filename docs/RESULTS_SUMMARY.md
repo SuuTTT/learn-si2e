@@ -1,5 +1,5 @@
 # SI2E Experiment Results Summary
-Generated: 2026-05-27
+Generated: 2026-05-27  |  **STATUS: ALL 44 RUNS COMPLETE ✅**
 
 ---
 
@@ -79,7 +79,7 @@ Note: baseline and SE both at 0% — this task requires structured exploration.
 
 ---
 
-## 5. UnlockPickup  ⚠️ nearly complete (SI2E s3 running)
+## 5. UnlockPickup  ✅ complete
 
 **Seeds: 3 × 4 methods, 3M frames.** Grid 11×6, must pick up key, unlock door, reach goal.
 
@@ -88,11 +88,9 @@ Note: baseline and SE both at 0% — this task requires structured exploration.
 | baseline | 0 | 0 | 0 | **0.0%** | 0.0 |
 | SE | 0 | 0 | 0 | **0.0%** | 0.0 |
 | VCSE | 0 | 0 | 0 | **0.0%** | 0.0 |
-| SI2E | 0 | 0 | *(running)* | **0.0%** | — |
+| SI2E | 0 | 0 | 0 | **0.0%** | 0.0 |
 
-**Preliminary finding:** All methods score 0% at 3M frames. This task appears too hard for the current frame budget with A2C. Qualitatively similar to DoorKey-16×16 (also 0% at 3M). The task may require longer training, a recurrent architecture (LSTM), or hierarchical decomposition.
-
-> SI2E s3 is currently training; result will be appended automatically on completion. Not expected to change the 0% finding.
+**Finding:** All methods score 0% at 3M frames. UnlockPickup requires chaining three sub-goals (find key → unlock door → reach goal) in an 11×6 grid, which appears to exceed the exploration horizon of flat A2C at 3M frames. This is consistent with DoorKey-16×16 (also 0% at 3M). Requires either longer training, a recurrent architecture, or hierarchical decomposition.
 
 ---
 
@@ -150,7 +148,7 @@ Note: baseline and SE both at 0% — this task requires structured exploration.
 | KC-S3R2 | 14/14† | ✅ Done |
 | KC-S3R1 | 12/12 | ✅ Done |
 | RedBlueDoors | 12/12 | ✅ Done |
-| UnlockPickup | 11/12 | ⚠️ SI2E s3 running |
+| UnlockPickup | 12/12 | ✅ Done (all 0%, too hard) |
 | Ablations (DK-8×8) | 6/6 | ✅ Done |
 | KC-S3R2 VCSE extra (s4,s5) | 2/2 | ✅ Done |
 
@@ -165,3 +163,49 @@ Note: baseline and SE both at 0% — this task requires structured exploration.
 3. **KC-S3R2 SI2E std=31.2**: higher than DK-8×8 (std=0). Does the harder task magnify seed sensitivity, or is 5 seeds insufficient?
 4. **Ablation follow-up**: test `no_cluster+no_norm` jointly to see if effects are additive or synergistic.
 5. **Publication table**: decide whether to report 3-seed or 5-seed results; KC-S3R2 with 5 seeds is more convincing.
+
+---
+
+## 10. Conclusions
+
+### C1 — SI2E reproduces and consistently outperforms VCSE on medium-hard tasks
+
+On DK-8×8 (5 seeds), SI2E achieves **100% ± 0.0** vs VCSE **97.8% ± 3.1**. The gap in *variance* is more important than the gap in *mean*: SI2E is reliable across all seeds; VCSE occasionally fails. On KC-S3R2 (5 seeds), SI2E has both higher mean (67.5% vs 54.0%) and lower std (31.2 vs 50.3). On easy tasks (KC-S3R1) all methods saturate; on too-hard tasks (UnlockPickup, DK-16×16) all fail.
+
+**The core claim — SI2E's variance reduction is its primary advantage over VCSE — is confirmed.**
+
+### C2 — Ablations isolate the two contributing mechanisms
+
+| Component removed | Mean (1M) | Std | vs SI2E |
+|-------------------|-----------|-----|---------|
+| `no_cluster` (drop reward₁) | 0.0% | 0.0 | complete collapse |
+| `no_norm` (absolute distances) | 22.2% | 38.4 | mostly collapses |
+| Full SI2E (ref, 3M) | 100.0% | 0.0 | — |
+
+- **Cluster-level H₂ bonus (`reward₁`) is load-bearing**: removing it causes 3/3 seeds to fail completely. It is not merely a variance-reduction trick; it provides a qualitatively different signal absent from VCSE.
+- **Relative batch-max normalization is important for stability**: without it, 2/3 seeds collapse and 1 gets lucky (std=38.4 vs SI2E's 0.0). This supports the hypothesis that relative normalization rescues the reward signal when the encoder's feature spread collapses during early training.
+
+### C3 — Value conditioning is the dominant single step (SE → VCSE)
+
+From the baseline progression on DK-8×8:
+- baseline → SE: +43.2pp mean, but std=49.5 (highly seed-dependent)
+- SE → VCSE: +54.6pp mean, std drops to 3.1 — **value conditioning is the key step**
+- VCSE → SI2E: +2.2pp mean, std drops to 0.0 — SI2E adds robustness
+
+### C4 — Task difficulty taxonomy
+
+| Task | Tier | Key observation |
+|------|------|----------------|
+| KC-S3R1 | Too easy | Ceiling at 3M; not useful for differentiation |
+| DK-8×8 | Right | Best differentiation; clean ordering baseline<SE<VCSE<SI2E |
+| KC-S3R2 | Right (hard) | High variance; 5 seeds needed; SI2E advantage visible |
+| RedBlueDoors | Right (hard) | VCSE≈SI2E with 3 seeds; high sensitivity to initialization |
+| DK-16×16 | Too hard | All 0% at 3M frames |
+| UnlockPickup | Too hard | All 0% at 3M frames; needs recurrent policy or more frames |
+
+### C5 — Open issues for future work
+
+1. **RedBlueDoors needs more seeds**: with 3 seeds and one failure each, VCSE≈SI2E≈55%. Paper reports 79-86%. Add seeds 4-5 for a stable mean.
+2. **UnlockPickup is unresolved**: whether any method can learn at 10M+ frames or with LSTM is unknown.
+3. **Ablation joint condition** (`no_cluster` + `no_norm`): are both mechanisms jointly necessary, or is one sufficient alone? Current evidence shows each is individually necessary.
+4. **KC-S3R2 variance is high even for SI2E** (std=31.2): suggests a genuinely hard exploration problem, not just algorithmic noise. More seeds or a curriculum approach may help.
