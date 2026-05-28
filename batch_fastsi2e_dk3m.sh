@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
-# batch_fast_si2e.sh
-# FastSI2E speed/performance validation.
-# Confirms glass-jax clustering (fast_se) matches PartitionTree accuracy
-# while being ~1.5x faster.
+# batch_fastsi2e_dk3m.sh
+# Run FastSI2E on DoorKey-8x8 at 3M frames (resumes from 1M checkpoints if present).
+# Gives paper-comparable results vs original SI2E (3M frames, 5 seeds, 100%±0%).
 #
-# Acceleration: seeds run 2 at a time (RAM-limited), DK-8x8 reduced to 1M frames.
-#
-# Usage:
-#   chmod +x batch_fast_si2e.sh
-#   nohup ./batch_fast_si2e.sh > logs/fast_si2e.log 2>&1 &
+# Run after batch_fast_si2e.sh completes DK-8x8 1M runs.
+# Usage: nohup ./batch_fastsi2e_dk3m.sh > logs/fast_si2e_dk3m.log 2>&1 &
 
 set -e
 
 SEEDS=(1 2 3)
-FRAMES_DK=1000000
-FRAMES_KC=3000000
+FRAMES=3000000
 A2C_DIR="/workspace/learn-si2e/SI2E/SI2E_A2C/rl-starter-files/rl-starter-files"
 RESULTS_BASE="/workspace/learn-si2e/results/fast-si2e"
 
@@ -24,6 +19,8 @@ SUMMARY="$RESULTS_BASE/summary.csv"
 if [[ ! -f "$SUMMARY" ]]; then
     echo "method,env,seed,success_rate_pct,fps" > "$SUMMARY"
 fi
+
+FAST_FLAGS="--algo a2c --use_entropy_reward --use_value_condition --beta 0.005 --fast_se"
 
 run_and_eval() {
     local method="$1"
@@ -40,16 +37,17 @@ run_and_eval() {
     local log_csv="${A2C_DIR}/storage/${model_name}/log.csv"
     local status_pt="${A2C_DIR}/storage/${model_name}/status.pt"
     local threshold=$(( frames - 100000 ))
+
     if [[ -f "$log_csv" ]] && [[ -f "$status_pt" ]]; then
         local last_f
         last_f=$(tail -1 "$log_csv" | cut -d',' -f2 | tr -d ' ')
         if [[ "$last_f" =~ ^[0-9]+$ ]] && (( last_f >= threshold )); then
-            echo "[SKIP-TRAIN] ${model_name} already at ${last_f} frames, has checkpoint"
+            echo "[SKIP-TRAIN] ${model_name} already at ${last_f} frames"
             if grep -q "^${method},${env},${seed}," "$SUMMARY" 2>/dev/null; then
                 echo "[SKIP-EVAL] ${model_name} already in summary"
                 return
             fi
-            echo "[EVAL-ONLY] ${model_name}: running eval on existing checkpoint..."
+            echo "[EVAL-ONLY] Running eval on checkpoint..."
             local eval_out
             eval_out=$(cd "$A2C_DIR" && python3 -m scripts.eval_success \
                 --env "$env" --model "$model_name" \
@@ -58,13 +56,15 @@ run_and_eval() {
             local sr; sr=$(echo "$eval_out" | grep "^SUCCESS_RATE=" | cut -d'=' -f2)
             local fps; fps=$(grep "FPS" "${out_dir}/train.log" 2>/dev/null | awk -F'FPS ' '{print $2}' | awk '{print $1}' | sort -n | tail -1)
             echo "${method},${env},${seed},${sr},${fps}" >> "$SUMMARY"
-            echo "[DONE] ${model_name}: SR=${sr}%  FPS=${fps}"
+            echo "[DONE] ${model_name}: SR=${sr}%"
             return
         fi
     fi
 
     echo "========================================================"
-    echo "[RUN] method=${method}  env=${env_short}  seed=${seed}  frames=${frames}"
+    local resume_msg="from scratch"
+    [[ -f "$status_pt" ]] && resume_msg="resuming from checkpoint"
+    echo "[RUN] method=${method}  env=${env_short}  seed=${seed}  frames=${frames}  (${resume_msg})"
     echo "========================================================"
     cd "$A2C_DIR"
     python3 -m scripts.train \
@@ -76,29 +76,22 @@ run_and_eval() {
         --log-interval 500 \
         --seed "$seed" \
         $algo_flags \
-        2>&1 | tee "${out_dir}/train.log"
+        2>&1 | tee "${out_dir}/train_3m.log"
 
-    [[ -f "$log_csv" ]] && cp "$log_csv" "${out_dir}/log.csv"
+    [[ -f "$log_csv" ]] && cp "$log_csv" "${out_dir}/log_3m.csv"
 
     local eval_out
-    eval_out=$(python3 -m scripts.eval_success \
+    eval_out=$(cd "$A2C_DIR" && python3 -m scripts.eval_success \
         --env "$env" --model "$model_name" \
         --episodes 200 --argmax --seed 999 2>&1)
     echo "$eval_out"
 
-    local sr
-    sr=$(echo "$eval_out" | grep "^SUCCESS_RATE=" | cut -d'=' -f2)
-    local fps
-    fps=$(grep "FPS" "${out_dir}/train.log" | awk -F'FPS ' '{print $2}' | awk '{print $1}' | sort -n | tail -1)
+    local sr; sr=$(echo "$eval_out" | grep "^SUCCESS_RATE=" | cut -d'=' -f2)
+    local fps; fps=$(grep "FPS" "${out_dir}/train_3m.log" | awk -F'FPS ' '{print $2}' | awk '{print $1}' | sort -n | tail -1)
     echo "${method},${env},${seed},${sr},${fps}" >> "$SUMMARY"
     echo "[DONE] ${model_name}: SR=${sr}%  FPS=${fps}"
 }
 
-SI2E_FLAGS="--algo a2c --use_entropy_reward --use_value_condition --beta 0.005"
-FAST_FLAGS="--algo a2c --use_entropy_reward --use_value_condition --beta 0.005 --fast_se"
-PPO_FAST_FLAGS="--algo ppo --use_entropy_reward --use_value_condition --beta 0.005 --fast_se"
-
-# 2 seeds at a time (~12 GB RAM; 15 GB available after PPO finishes)
 run_pairs() {
     local method="$1" env="$2" flags="$3" frames="$4"
     shift 4
@@ -113,21 +106,15 @@ run_pairs() {
     (( ${#pids[@]} > 0 )) && wait "${pids[@]}"
 }
 
-echo "=== DK-8x8: original SI2E vs FastSI2E  (seeds 2 at a time) ==="
-run_pairs "si2e"      "MiniGrid-DoorKey-8x8-v0" "$SI2E_FLAGS"  "$FRAMES_DK" "${SEEDS[@]}"
-run_pairs "fast-si2e" "MiniGrid-DoorKey-8x8-v0" "$FAST_FLAGS"  "$FRAMES_DK" "${SEEDS[@]}"
-
-echo "=== KC-S3R2: FastSI2E + PPO-FastSI2E  (seeds 2 at a time) ==="
-run_pairs "fast-si2e"     "MiniGrid-KeyCorridorS3R2-v0" "$FAST_FLAGS"     "$FRAMES_KC" "${SEEDS[@]}"
-run_pairs "ppo-fast-si2e" "MiniGrid-KeyCorridorS3R2-v0" "$PPO_FAST_FLAGS" "$FRAMES_KC" "${SEEDS[@]}"
+echo "=== DK-8x8: FastSI2E at 3M frames (paper-comparable) ==="
+run_pairs "fast-si2e" "MiniGrid-DoorKey-8x8-v0" "$FAST_FLAGS" "$FRAMES" "${SEEDS[@]}"
 
 echo ""
-echo "=== FAST-SI2E SUMMARY ==="
+echo "=== FAST-SI2E DK-8x8 3M SUMMARY ==="
 python3 - <<'PYEOF'
-import csv, os
+import csv, os, numpy as np
 from collections import defaultdict
 p = "/workspace/learn-si2e/results/fast-si2e/summary.csv"
-if not os.path.exists(p): exit()
 data = defaultdict(lambda: defaultdict(list))
 with open(p) as f:
     for row in csv.DictReader(f):
@@ -136,7 +123,6 @@ with open(p) as f:
 for env, methods in sorted(data.items()):
     print(f"\n{env}:")
     for method, vals in sorted(methods.items()):
-        mean = sum(vals)/len(vals)
-        std = (sum((v-mean)**2 for v in vals)/len(vals))**0.5
+        mean = np.mean(vals); std = np.std(vals)
         print(f"  {method:24s} N={len(vals):2d}  {mean:.1f}% ± {std:.1f}")
 PYEOF

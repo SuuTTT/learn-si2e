@@ -1,1 +1,11 @@
 method,env,seed,success_rate_pct,frames
+ppo-si2e,MiniGrid-DoorKey-8x8-v0,1,100.00,2944000
+ppo-si2e,MiniGrid-DoorKey-8x8-v0,2,92.50,2944000
+ppo-si2e,MiniGrid-DoorKey-8x8-v0,3,0.00,2944000
+ppo-si2e,MiniGrid-DoorKey-8x8-v0,4,0.00,2944000
+ppo-si2e,MiniGrid-DoorKey-8x8-v0,5,100.00,2944000
+ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,1,0.00,2944000
+ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,2,0.00,2944000
+ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,3,0.00,2944000
+ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,4,0.00,2944000
+ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,5,0.00,2944000

@@ -3,7 +3,7 @@
 # Adaptive-β scheduling: test if beta_adaptive reduces seed variance on hard tasks.
 # Target: RedBlueDoors-6x6 std < 20% (vs current SI2E std=47%).
 #
-# Also tests KC-S3R2 where SI2E std=31%.
+# Acceleration: --fast_se on all runs, seeds run 2 at a time (RAM-limited).
 #
 # Usage:
 #   chmod +x batch_adaptive_beta.sh
@@ -36,12 +36,27 @@ run_and_eval() {
     mkdir -p "$out_dir"
 
     local log_csv="${A2C_DIR}/storage/${model_name}/log.csv"
-    if [[ -f "$log_csv" ]]; then
+    local status_pt="${A2C_DIR}/storage/${model_name}/status.pt"
+    if [[ -f "$log_csv" ]] && [[ -f "$status_pt" ]]; then
         local last_f
         last_f=$(tail -1 "$log_csv" | cut -d',' -f2 | tr -d ' ')
         if [[ "$last_f" =~ ^[0-9]+$ ]] && (( last_f >= 2900000 )); then
-            echo "[SKIP] ${model_name} already at ${last_f} frames"
-            grep "^${method},${env},${seed}," "$SUMMARY" > /dev/null 2>&1 && return
+            echo "[SKIP-TRAIN] ${model_name} already at ${last_f} frames, has checkpoint"
+            if grep -q "^${method},${env},${seed}," "$SUMMARY" 2>/dev/null; then
+                echo "[SKIP-EVAL] ${model_name} already in summary"
+                return
+            fi
+            echo "[EVAL-ONLY] ${model_name}: running eval on existing checkpoint..."
+            local eval_out
+            eval_out=$(cd "$A2C_DIR" && python3 -m scripts.eval_success \
+                --env "$env" --model "$model_name" \
+                --episodes 200 --argmax --seed 999 2>&1)
+            echo "$eval_out"
+            local sr; sr=$(echo "$eval_out" | grep "^SUCCESS_RATE=" | cut -d'=' -f2)
+            local fps; fps=$(grep "FPS" "${out_dir}/train.log" 2>/dev/null | awk -F'FPS ' '{print $2}' | awk '{print $1}' | sort -n | tail -1)
+            echo "${method},${env},${seed},${sr},${fps}" >> "$SUMMARY"
+            echo "[DONE] ${model_name}: SR=${sr}%  FPS=${fps}"
+            return
         fi
     fi
 
@@ -54,7 +69,7 @@ run_and_eval() {
         --model "$model_name" \
         --frames "$FRAMES" \
         --use_batch \
-        --save-interval 100 \
+        --save-interval 0 \
         --log-interval 500 \
         --seed "$seed" \
         $algo_flags \
@@ -71,36 +86,44 @@ run_and_eval() {
     local sr
     sr=$(echo "$eval_out" | grep "^SUCCESS_RATE=" | cut -d'=' -f2)
     local final_frames
-    final_frames=$(tail -1 "${out_dir}/log.csv" 2>/dev/null | cut -d'=' -f2 || echo "$FRAMES")
+    final_frames=$(tail -1 "${out_dir}/log.csv" 2>/dev/null | cut -d',' -f2 | tr -d ' ' || echo "$FRAMES")
     echo "${method},${env},${seed},${sr},${final_frames}" >> "$SUMMARY"
     echo "[DONE] ${model_name}: SR=${sr}%"
 }
 
-SI2E_FLAGS="--algo a2c --use_entropy_reward --use_value_condition --beta 0.005"
-SI2E_ADAPTIVE_FLAGS="--algo a2c --use_entropy_reward --use_value_condition --beta 0.005 --beta_adaptive"
-PPO_ADAPTIVE_FLAGS="--algo ppo --use_entropy_reward --use_value_condition --beta 0.005 --beta_adaptive"
+# All methods use --fast_se for speed consistency
+SI2E_FLAGS="--algo a2c --use_entropy_reward --use_value_condition --beta 0.005 --fast_se"
+SI2E_ADAPTIVE_FLAGS="--algo a2c --use_entropy_reward --use_value_condition --beta 0.005 --beta_adaptive --fast_se"
+PPO_ADAPTIVE_FLAGS="--algo ppo --use_entropy_reward --use_value_condition --beta 0.005 --beta_adaptive --fast_se"
+
+# Run seeds in pairs — each training run uses ~6 GB RAM, 15 GB available after PPO finishes
+run_pairs() {
+    local method="$1" env="$2" flags="$3"
+    shift 3
+    local pids=()
+    for seed in "$@"; do
+        run_and_eval "$method" "$env" "$seed" "$flags" &
+        pids+=($!)
+        if (( ${#pids[@]} >= 2 )); then
+            wait "${pids[@]}"; pids=()
+        fi
+    done
+    (( ${#pids[@]} > 0 )) && wait "${pids[@]}"
+}
 
 # ── RedBlueDoors: primary variance reduction test ──────────────────────────
-echo "=== RedBlueDoors: SI2E fixed-β (5 seeds) ==="
-for seed in "${SEEDS[@]}"; do
-    run_and_eval "si2e-fixed" "MiniGrid-RedBlueDoors-6x6-v0" "$seed" "$SI2E_FLAGS"
-done
+echo "=== RedBlueDoors: SI2E fixed-β  (seeds 2 at a time) ==="
+run_pairs "si2e-fixed" "MiniGrid-RedBlueDoors-6x6-v0" "$SI2E_FLAGS" "${SEEDS[@]}"
 
-echo "=== RedBlueDoors: SI2E adaptive-β (5 seeds) ==="
-for seed in "${SEEDS[@]}"; do
-    run_and_eval "si2e-adaptive" "MiniGrid-RedBlueDoors-6x6-v0" "$seed" "$SI2E_ADAPTIVE_FLAGS"
-done
+echo "=== RedBlueDoors: SI2E adaptive-β  (seeds 2 at a time) ==="
+run_pairs "si2e-adaptive" "MiniGrid-RedBlueDoors-6x6-v0" "$SI2E_ADAPTIVE_FLAGS" "${SEEDS[@]}"
 
-echo "=== RedBlueDoors: PPO-SI2E adaptive-β (5 seeds) ==="
-for seed in "${SEEDS[@]}"; do
-    run_and_eval "ppo-si2e-adaptive" "MiniGrid-RedBlueDoors-6x6-v0" "$seed" "$PPO_ADAPTIVE_FLAGS"
-done
+echo "=== RedBlueDoors: PPO-SI2E adaptive-β  (seeds 2 at a time) ==="
+run_pairs "ppo-si2e-adaptive" "MiniGrid-RedBlueDoors-6x6-v0" "$PPO_ADAPTIVE_FLAGS" "${SEEDS[@]}"
 
 # ── KC-S3R2: secondary variance reduction test ─────────────────────────────
-echo "=== KC-S3R2: SI2E adaptive-β (5 seeds) ==="
-for seed in "${SEEDS[@]}"; do
-    run_and_eval "si2e-adaptive" "MiniGrid-KeyCorridorS3R2-v0" "$seed" "$SI2E_ADAPTIVE_FLAGS"
-done
+echo "=== KC-S3R2: SI2E adaptive-β  (seeds 2 at a time) ==="
+run_pairs "si2e-adaptive" "MiniGrid-KeyCorridorS3R2-v0" "$SI2E_ADAPTIVE_FLAGS" "${SEEDS[@]}"
 
 # ── Summary ──────────────────────────────────────────────────────────────
 echo ""

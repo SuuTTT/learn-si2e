@@ -1,0 +1,62 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+/workspace/learn-si2e/SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/scripts/train.py --env MiniGrid-DoorKey-8x8-v0 --model fastse-fast-si2e-DoorKey-8x8-s2 --frames 1000000 --use_batch --save-interval 0 --log-interval 500 --seed 2 --algo a2c --use_entropy_reward --use_value_condition --beta 0.005 --fast_se
+
+Namespace(algo='a2c', env='MiniGrid-DoorKey-8x8-v0', model='fastse-fast-si2e-DoorKey-8x8-s2', seed=2, log_interval=500, save_interval=0, procs=16, frames=1000000, epochs=4, batch_size=256, frames_per_proc=None, discount=0.99, lr=0.001, gae_lambda=0.95, entropy_coef=0.01, value_loss_coef=0.5, max_grad_norm=0.5, optim_eps=1e-08, optim_alpha=0.99, clip_eps=0.2, recurrence=1, text=False, use_entropy_reward=True, use_value_condition=True, beta=0.005, beta_adaptive=False, fast_se=True, use_batch=True, ablation=None, mem=False)
+
+Device: cuda:0
+
+Environments loaded
+
+Training status loaded
+
+Observations preprocessor loaded
+Model loaded
+
+ACModel(
+  (image_conv): Sequential(
+    (0): Conv2d(3, 16, kernel_size=(2, 2), stride=(1, 1))
+    (1): ReLU()
+    (2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+    (3): Conv2d(16, 32, kernel_size=(2, 2), stride=(1, 1))
+    (4): ReLU()
+    (5): Conv2d(32, 64, kernel_size=(2, 2), stride=(1, 1))
+    (6): ReLU()
+  )
+  (actor): Sequential(
+    (0): Linear(in_features=64, out_features=64, bias=True)
+    (1): Tanh()
+    (2): Linear(in_features=64, out_features=7, bias=True)
+  )
+  (critic): Sequential(
+    (0): Linear(in_features=64, out_features=64, bias=True)
+    (1): Tanh()
+    (2): Linear(in_features=64, out_features=1, bias=True)
+  )
+  (extr_critic): Sequential(
+    (0): Linear(in_features=64, out_features=64, bias=True)
+    (1): Tanh()
+    (2): Linear(in_features=64, out_features=1, bias=True)
+  )
+)
+
+Optimizer loaded
+
+U 500 | F 064000 | FPS 1744 | D 37 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 640.0 0.0 640.0 640.0 | H 1.756 | V -0.273 | pL -0.027 | vL 0.001 | ∇ 0.024
+U 1000 | F 128000 | FPS 1486 | D 76 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 640.0 0.0 640.0 640.0 | H 1.783 | V -0.329 | pL -0.006 | vL 0.001 | ∇ 0.008
+U 1500 | F 192000 | FPS 1418 | D 116 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 640.0 0.0 640.0 640.0 | H 1.785 | V -0.350 | pL 0.009 | vL 0.000 | ∇ 0.012
+U 2000 | F 256000 | FPS 1095 | D 160 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 640.0 0.0 640.0 640.0 | H 1.781 | V -0.278 | pL 0.186 | vL 0.025 | ∇ 0.158
+U 2500 | F 320000 | FPS 1492 | D 204 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 640.0 0.0 640.0 640.0 | H 1.787 | V -0.284 | pL -0.003 | vL 0.000 | ∇ 0.012
+U 3000 | F 384000 | FPS 1438 | D 247 | rR:μσmM 0.07 0.19 0.00 0.68 | F:μσmM 600.4 110.0 228.0 640.0 | H 1.782 | V -0.332 | pL 0.002 | vL 0.001 | ∇ 0.008
+U 3500 | F 448000 | FPS 1436 | D 290 | rR:μσmM 0.03 0.12 0.00 0.50 | F:μσmM 622.4 68.3 358.0 640.0 | H 1.724 | V -0.251 | pL -0.013 | vL 0.001 | ∇ 0.016
+U 4000 | F 512000 | FPS 1565 | D 335 | rR:μσmM 0.03 0.13 0.00 0.53 | F:μσmM 620.8 74.6 332.0 640.0 | H 1.762 | V -0.303 | pL 0.041 | vL 0.008 | ∇ 0.059
+U 4500 | F 576000 | FPS 1362 | D 378 | rR:μσmM 0.04 0.17 0.00 0.69 | F:μσmM 613.6 102.1 218.0 640.0 | H 1.753 | V -0.279 | pL -0.022 | vL 0.001 | ∇ 0.016
+U 5000 | F 640000 | FPS 1496 | D 422 | rR:μσmM 0.00 0.00 0.00 0.00 | F:μσmM 640.0 0.0 640.0 640.0 | H 1.771 | V -0.316 | pL -0.009 | vL 0.001 | ∇ 0.020
+U 5500 | F 704000 | FPS 1438 | D 465 | rR:μσmM 0.06 0.22 0.00 0.90 | F:μσmM 604.6 137.2 73.0 640.0 | H 1.765 | V -0.354 | pL -0.020 | vL 0.001 | ∇ 0.018
+U 6000 | F 768000 | FPS 1185 | D 509 | rR:μσmM 0.06 0.14 0.00 0.41 | F:μσmM 608.3 71.6 416.0 640.0 | H 1.769 | V -0.269 | pL 0.008 | vL 0.000 | ∇ 0.011
+U 6500 | F 832000 | FPS 1244 | D 553 | rR:μσmM 0.11 0.24 0.00 0.85 | F:μσmM 574.6 147.0 110.0 640.0 | H 1.696 | V -0.254 | pL 0.002 | vL 0.000 | ∇ 0.013
+U 7000 | F 896000 | FPS 1334 | D 596 | rR:μσmM 0.20 0.34 0.00 0.93 | F:μσmM 516.5 210.2 52.0 640.0 | H 1.664 | V -0.194 | pL -0.013 | vL 0.001 | ∇ 0.032
+U 7500 | F 960000 | FPS 1416 | D 641 | rR:μσmM 0.11 0.25 0.00 0.77 | F:μσmM 572.3 153.1 161.0 640.0 | H 1.780 | V -0.240 | pL -0.016 | vL 0.001 | ∇ 0.017
+Final model saved

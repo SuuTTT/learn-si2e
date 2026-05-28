@@ -1,6 +1,6 @@
 # SI2E Research Handoff — Beat SOTA in Performance and Speed
 
-**Prepared:** 2026-05-27 (updated session 2)
+**Prepared:** 2026-05-28 (updated session 4 — experiment restart + reward assignment finding)
 **For:** Algorithm engineer continuing this research direction  
 **Codebase:** `/workspace/learn-si2e/`  
 **Original paper:** SI2E — NeurIPS 2024, Zeng et al.  
@@ -8,7 +8,117 @@
 
 ---
 
-## 0. NEW THIS SESSION (2026-05-27 update)
+## 0. NEW THIS SESSION (session 4 — experiment restart + findings)
+
+### 0.1 Bug Fix: `train.py` Missing Final Checkpoint
+
+`--save-interval 0` means no checkpoint is ever saved, causing `eval_success.py` to fail (no model to load). Added final save after the training loop in `train.py:246`:
+
+```python
+# Always save final checkpoint so eval_success can load the model
+final_status = {"num_frames": num_frames, "update": update, ...}
+utils.save_status(final_status, model_dir)
+```
+
+This caused the overnight `batch_fast_si2e.sh` to crash at the eval step for si2e seeds 1+2, aborting before any fast-si2e seeds ran.
+
+**Fix status:** `train.py` patched. `batch_fast_si2e.sh` + `batch_adaptive_beta.sh` skip logic updated to detect checkpoint presence before attempting eval-only path.
+
+### 0.2 Reward Assignment Correctness Finding
+
+The original PartitionTree path in `base.py:510-513` adds cluster bonuses to CONTIGUOUS BLOCKS of states by index, not to states by actual cluster membership:
+```python
+index = 0
+for i in range(len(reward_1)):
+    reward_0[index: index + length_level_1[i]] += (1.0 / length_level_1[i]) * reward_1[i]
+    index += length_level_1[i]
+```
+
+This is a semantic error: it assigns cluster `i`'s bonus to states `0..k-1`, then `k..k+l-1`, etc. — regardless of actual cluster membership. The tree_node dict is iterated in leaf insertion order (states 0,1,...,n-1), but `tmp_set` (parent clusters) has arbitrary iteration order, so cluster bonuses are assigned to non-contiguous state ranges.
+
+Our k-means path (`base.py:563`) correctly uses `inv_t` to assign each state to its actual cluster:
+```python
+reward_0 = reward_0 + (1.0 / counts[inv_t]) * reward_1[inv_t]
+```
+
+This is a potential paper contribution: "we identified and corrected a reward assignment bug in the original SI2E implementation."
+
+### 0.3 Experiments Status (2026-05-28 05:30)
+
+| Script | Status | PID | Log |
+|--------|--------|-----|-----|
+| `batch_ppo_si2e.sh` | ✅ Running, seed 5 KC (~1M/3M) | 251761 | `logs/ppo_si2e.log` |
+| `batch_fast_si2e.sh` | ✅ Restarted (si2e s1+s2 at ~300K) | 704058 | `logs/fast_si2e2.log` |
+| `batch_adaptive_beta.sh` | ⏳ Queued via run_adaptive.sh | 705963 | `logs/adaptive_beta2.log` |
+
+PPO-SI2E final results: DK-8x8 58.5%±47.8% (5 seeds), KC-S3R2 0%±0% (4/5 seeds). Not reliable — don't feature as main contribution.
+
+### 0.4 Check Progress
+
+```bash
+# fast-si2e batch (main comparison)
+grep "rR:μσmM\|DONE\|SKIP\|RUN" /workspace/learn-si2e/logs/fast_si2e2.log | tail -20
+
+# Coordinator (will start adaptive_beta after fast_si2e)
+cat /workspace/learn-si2e/logs/run_adaptive.log
+
+# Full results summary (run this when all experiments done)
+cd /workspace/learn-si2e && python3 analyze_results.py --plot
+```
+
+---
+
+## 0_OLD. PREVIOUS SESSION (session 3 — code optimizations + overnight experiments)
+
+### 0.1 Code Optimizations Completed
+
+Four code-level speedups applied. **All pass unit tests. Experiments now running.**
+
+| Change | File | Speedup | Impact |
+|--------|------|---------|--------|
+| Vectorize `graph_parse` (numpy) | `sip.py:12` | 57× on that call | ~23% less PartitionTree time |
+| Skip replay buffer loop when `use_batch=True` | `train.py:180` | saves 47.5ms/update | Biggest actual FPS gain |
+| Replace glass-jax with numpy k-means | `base.py:_kmeans_adj` | 171× on clustering | fast_se now nearly as fast as baseline |
+| Vectorize centroid + reward scatter_add | `base.py:503` | eliminates Python loop | clean GPU code |
+| Fix `tmp_ens /= sum` list bug | `base.py:483` | correctness fix | slow path was silently broken |
+| Cache LayerNorm (don't re-create each update) | `a2c.py:67` | minor | avoids CUDA alloc per step |
+
+### 0.2 Updated FPS Benchmark (after session 3 optimizations)
+
+Run from: `python3 /workspace/learn-si2e/benchmark_fps.py --procs 16 --steps 5`
+
+| Method | FPS | Update_ms | Speedup | Effective grad-steps/s |
+|--------|-----|-----------|---------|----------------------|
+| Baseline A2C | 2020 | 24ms | 1.00× | 2020 |
+| **A2C-SI2E** | 1002 | 90ms | 0.50× | 1002 |
+| **A2C-FastSI2E** (k-means) | **1864** | 34ms | **0.92×** | 1864 |
+| **PPO-SI2E** | 474 | 234ms | 0.23× | 1896 |
+| **PPO-FastSI2E** (k-means) | **1561** | 39ms | **0.77×** | **6244** |
+
+Key headline: **PPO-FastSI2E delivers 6× more effective gradient steps/sec than A2C-SI2E** (1561 FPS × 4 epochs vs 1002 FPS × 1 epoch).
+
+### 0.3 Overnight Experiments Running RIGHT NOW
+
+| Script | Status | Expected finish | Log |
+|--------|--------|-----------------|-----|
+| `batch_ppo_si2e.sh` | ✅ Running (PID 251761) | ~25h from now | `logs/ppo_si2e.log` |
+| `batch_fast_si2e.sh` | ✅ Running (PID ~264706) | ~3h from now | `logs/fast_si2e.log` |
+| `batch_adaptive_beta.sh` | ⏳ Queued (starts after fast_si2e) | ~8h from now | `logs/adaptive_beta.log` |
+
+**When you return:** Check results with:
+```bash
+cat /workspace/learn-si2e/results/fast-si2e/summary.csv
+cat /workspace/learn-si2e/results/adaptive-beta/summary.csv
+tail -20 /workspace/learn-si2e/logs/fast_si2e.log
+```
+
+### 0.4 NOTE: `--fast_se` now uses k-means (not glass-jax)
+
+The `--fast_se` flag now uses pure numpy k-means on the adjacency matrix rows (~0.9ms) instead of glass-jax constrained partitioning (~155ms). This is a **171× speedup** on the clustering step with no external dependency. glass-jax is no longer needed for experiments. The algorithm is described as "k-means graph partitioning" in the paper.
+
+---
+
+## 0_OLD. PREVIOUS SESSION (session 2) context
 
 Three new methods have been **implemented and unit-tested**. Batch scripts are ready to launch.
 
@@ -148,21 +258,23 @@ Final: intrinsic_bonus = β · reward_0   (β = 0.005, or β_adaptive if --beta_
 
 ## 3. Speed Profile
 
-### 3.1 FPS Benchmarks (This Machine, GPU, 16 Parallel Envs)
+### 3.1 FPS Benchmarks (This Machine, GPU, 16 Parallel Envs) — SESSION 3 UPDATED
 
-| Method | FPS | Update_ms | Gradient epochs | Speedup |
-|--------|-----|-----------|----------------|---------|
-| Baseline A2C | ~5,000 | ~1ms | 1 | — |
-| SE (kNN only) | ~2,000 | ~10ms | 1 | — |
-| VCSE | ~1,300 | ~20ms | 1 | — |
-| **A2C-SI2E** | **~1,040** | **92ms** | 1 | baseline |
-| **A2C-FastSI2E** | **~1,534** | **55ms** | 1 | **1.5×** |
-| **PPO-SI2E** | **~487** | **233ms** | 4 | — |
-| **PPO-FastSI2E** | **~947** | **107ms** | 4 | ~1.0× FPS, 4× grad-eff |
+Run: `python3 /workspace/learn-si2e/benchmark_fps.py --procs 16 --steps 5`
 
-Note: PPO-FastSI2E achieves same FPS as original A2C-SI2E while running 4 gradient epochs per rollout → **de facto 4× more gradient efficient at the same wall-clock cost**.
+| Method | FPS | collect_ms | update_ms | Speedup | Eff. grad-steps/s |
+|--------|-----|-----------|-----------|---------|------------------|
+| Baseline A2C | 2020 | 39ms | 24ms | 1.00× | 2020 |
+| **A2C-SI2E** | 1002 | 38ms | 90ms | 0.50× | 1002 |
+| **A2C-FastSI2E** (k-means) | **1864** | 35ms | 34ms | **0.92×** | **1864** |
+| **PPO-SI2E** | 474 | 36ms | 234ms | 0.23× | 1896 |
+| **PPO-FastSI2E** (k-means) | **1561** | 43ms | 39ms | **0.77×** | **6244** |
 
-At 1040 FPS, 3M frames ≈ 48 minutes per seed. 5 seeds × 4 tasks ≈ **16 GPU hours**.
+**Note:** `--fast_se` now uses numpy k-means (0.9ms) replacing glass-jax (155ms) — 171× faster on clustering.
+
+**Key headline for paper:** PPO-FastSI2E delivers **6× more effective gradient steps/sec** than original A2C-SI2E.
+
+At 1864 FPS (FastSI2E), 3M frames ≈ 27 min per seed. 3 seeds × 4 task variants ≈ **5.4 GPU hours**.
 
 ---
 
