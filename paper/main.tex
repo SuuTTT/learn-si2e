@@ -238,19 +238,22 @@ all methods succeed equally (simple community structure). On KeyCorridorS3R2
 Leiden and Infomap dramatically outperform k-means (67.3\%$\pm$40.3), showing
 that graph-theoretic community structure matters for multi-room topology.
 
-\textbf{(3) k-means trades variance for speed.} Fastest (4.0$\times$) but
-bimodal on KeyCorridorS3R2: 3/5 seeds converge near 100\%, 2/5 fail near 0\%.
+\textbf{(3) k-means matches SI2E on RedBlueDoors.} FastSI2E k-means achieves
+50.4\%$\pm$36.1 on RBD-6x6 --- comparable to SI2E (55.7\%$\pm$38.7) --- at
+4$\times$ the training speed. The variance remains high (bimodal pattern).
 
-\textbf{(4) Adaptive-$\beta$ stabilises hard tasks.} RBD convergence improves
-from 2/5 to 4/5 seeds; std on RBD halved (40.1 $\to$ 27.4).
+\textbf{(4) Adaptive-$\beta$ helps with the original \si{} but not with k-means.}
+\si{} + adaptive-$\beta$ raises RBD from 34\% to 53.4\% (2/5 $\to$ 4/5 seeds).
+However, combining adaptive-$\beta$ with \fastsi{} k-means \emph{hurts} performance:
+28.6\%$\pm$23.6 on KC-S3R2 and 30.0\%$\pm$36.5 on RBD --- both substantially
+below either component alone. We discuss this interaction in \S\ref{sec:discussion}.
 
 \textbf{(5) All FastSI2E variants beat SI2E on speed} with no accuracy loss on
 DoorKey-8x8.
 
 \begin{table*}[t]
 \centering
-\caption{Success rate (\%) mean$\pm$std and FPS (3\,M frames, 3--5 seeds).
-  $N$ = number of seeds. TBD = experiments in progress.}
+\caption{Success rate (\%) mean$\pm$std and FPS (3\,M frames, 3--5 seeds per condition).}
 \label{tab:main}
 \small
 \begin{tabular}{lcccccc}
@@ -260,12 +263,12 @@ Method & DK-8x8 & KC-S3R2 & RBD-6x6 & FPS & vs.\ \si{} & $N$ \\
 VCSE & 97.8$\pm$2.8 & 54.0$\pm$45.0 & 55.4$\pm$39.1 & $\sim$1950 & 4.0$\times$ & 5 \\
 \si{} (PartitionTree) & 100.0$\pm$0.0 & 67.5$\pm$27.9 & 55.7$\pm$38.7 & 488 & 1$\times$ & 5 \\
 \midrule
-\fastsi{} k-means & \textbf{100.0$\pm$0.0} & 67.3$\pm$40.3 & TBD & \textbf{1952} & \textbf{4.0$\times$} & 5 \\
+\fastsi{} k-means & \textbf{100.0$\pm$0.0} & 67.3$\pm$40.3 & 50.4$\pm$36.1 & \textbf{1952} & \textbf{4.0$\times$} & 3--5 \\
 \fastsi{} Leiden & \textbf{100.0$\pm$0.0} & 91.8$\pm$11.5 & --- & 1364 & 2.8$\times$ & 3 \\
 \textbf{\fastsi{} Infomap} & 99.5$\pm$0.7 & \textbf{95.7$\pm$5.8} & --- & 1540 & 3.2$\times$ & 3 \\
 \midrule
 \si{} + adaptive-$\beta$ & --- & 46.5$\pm$21.4 & \textbf{53.4$\pm$27.4} & 488 & 1$\times$ & 5 \\
-\fastsi{} + adaptive-$\beta$ & --- & TBD & TBD & $\sim$1700 & $\sim$3.5$\times$ & --- \\
+\fastsi{} + adaptive-$\beta$ & --- & 28.6$\pm$23.6 & 30.0$\pm$36.5 & $\sim$1900 & $\sim$3.9$\times$ & 5 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -407,12 +410,24 @@ faster (24\,ms vs.\ 27\,ms). For practical use we recommend Infomap unless
 the environment is known to have simple state topology, in which case k-means'
 4$\times$ speedup over SI2E may be preferred.
 
+\textbf{Why adaptive-$\beta$ hurts with k-means.}
+\label{sec:discussion}
+Adaptive-$\beta$ works by reducing the exploration coefficient as the agent's
+recent success rate rises. With the original \si{}'s PartitionTree, clusters are
+semantically coherent (built from the full graph hierarchy), so the adaptive
+signal reliably tracks progress. With k-means, clusters are noisier and less
+stable across updates: a successful episode may not register in the cluster
+entropy signal, causing $\beta$ to oscillate and destabilise training. This
+suggests adaptive-$\beta$ should be paired with a semantically reliable
+clustering method (PartitionTree, or potentially Infomap/Leiden) rather than
+a speed-optimised proxy. We recommend using Infomap for any deployment that
+combines speed with stable adaptive scheduling.
+
 \textbf{Bimodal convergence.}
-Despite adaptive-$\beta$, KC-S3R2 and RBD still exhibit high variance across
-seeds. This likely reflects an environment-level property (long planning
-horizons, sparse terminal reward) amplified by the intrinsic bonus occasionally
-preventing exploitation after early success. Future work: entropy-conditioned
-bonus annealing or a separate extrinsic value head.
+Despite adaptive-$\beta$ with the original \si{}, KC-S3R2 and RBD still exhibit
+high variance. This likely reflects an environment-level property (long planning
+horizons, sparse terminal reward). Future work: entropy-conditioned bonus
+annealing or a separate extrinsic value head.
 
 \textbf{PPO incompatibility.}
 The off-policy correction in PPO ($\sim$4 epochs per rollout) creates a

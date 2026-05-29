@@ -11,8 +11,8 @@
 | FastSI2E Leiden | ✅ DONE | 2.8× faster, **+24 pp on KC-S3R2** |
 | FastSI2E Infomap | ✅ DONE | 3.2× faster, **+28 pp on KC-S3R2 (best overall)** |
 | Adaptive-β (stability) | ✅ DONE | RBD: 34%→53%, bimodal 2/5→4/5 |
-| FastSI2E on RBD | 🔄 running (~10 min) | TBD |
-| FastSI2E + adaptive-β | 🔄 queued (~4 h) | TBD |
+| FastSI2E on RBD | ✅ DONE | 50.4%±36.1 (comparable to SI2E) |
+| FastSI2E + adaptive-β | ✅ DONE | **NEGATIVE**: 28.6% KC, 30.0% RBD (worse than both components) |
 | PPO-SI2E (negative result) | ✅ DONE | 0% everywhere |
 | Paper draft | ✅ written | `paper_draft.md` |
 | Analysis & figures | ✅ done | `analyze_results.py --plot` |
@@ -95,23 +95,28 @@ PPO is categorically incompatible with SI2E's intrinsic bonus. Hypothesis: off-p
 
 ---
 
-## Milestone 6 — Phase 2 Experiments 🔄 RUNNING
+## Milestone 6 — Phase 2 Experiments ✅ DONE
 
 ### (A) KC-S3R2 FastSI2E seeds 4, 5 ✅
 - s4: **100%** at 1753 FPS
 - s5: **100%** at 1801 FPS
 - FastSI2E KC now 5 seeds: 25.5%, 100%, 11.0%, 100%, 100% → **67.3%±40.3**
 
-### (B) RedBlueDoors FastSI2E s1–3 🔄 running (2.3M/3M, ~10 min left)
-- s1 and s2 active; s3 queued
-- First test of FastSI2E (k-means) on RBD environment
+### (B) RedBlueDoors FastSI2E s1–3 ✅
+- s1: 68.5%, s2: 82.6%, s3: 0.0% → **50.4%±36.1**
+- FastSI2E k-means on RBD comparable to SI2E (55.7%±38.7) at 4× speed
+- Still bimodal: 2/3 seeds converge, 1/3 fails
 
-### (C) FastSI2E + adaptive-β on KC-S3R2 s1–5 ⏳ queued
-- Combines speed (4×) + stability (adaptive-β)
-- Expected: mean ≈ 46.5% (adaptive-β baseline) with ~1700 FPS
+### (C) FastSI2E + adaptive-β on KC-S3R2 s1–5 ✅ — NEGATIVE RESULT
+- s1: 7.5%, s2: 66.5%, s3: 37.0%, s4: 0.0%, s5: 32.0% → **28.6%±23.6**
+- **WORSE than FastSI2E alone (67.3%) and SI2E+adaptive (46.5%)**
+- Adaptive-β hurts when paired with noisy k-means clusters
 
-### (D) FastSI2E + adaptive-β on RBD s1–5 ⏳ queued
-- Expected: similar to SI2E-adaptive (53.4%±27.4) but 4× faster
+### (D) FastSI2E + adaptive-β on RBD s1–5 ✅ — NEGATIVE RESULT
+- s1: 73.5%, s2: 0.0%, s3: 0.5%, s4: 76.0%, s5: 0.0% → **30.0%±36.5**
+- **WORSE than SI2E+adaptive (53.4%±27.4)**
+- Same bimodal pattern; adaptive-β does not help here
+- Hypothesis: k-means cluster noise makes the success-rate signal unreliable for adaptive scheduling
 
 ---
 
@@ -125,11 +130,11 @@ python3 analyze_results.py   # prints this table live
 |--------|---------|---------|---------|-----|
 | VCSE (orig.) | 97.8±2.8 | 54.0±45.0 | 55.4±39.1 | ~1950 |
 | SI2E (orig.) | 100.0±0.0 | 67.5±27.9 | 55.7±38.7 | 488 |
-| **FastSI2E k-means** | **100.0±0.0** | 67.3±40.3 | TBD | **1952** |
+| **FastSI2E k-means** | **100.0±0.0** | 67.3±40.3 | 50.4±36.1 | **1952** |
 | FastSI2E Leiden | 100.0±0.0 | **91.8±11.5** | — | 1364 |
 | **FastSI2E Infomap** | 99.5±0.7 | **95.7±5.8** | — | **1540** |
 | SI2E + adaptive-β | — | 46.5±21.4 | **53.4±27.4** | 488 |
-| FastSI2E + adaptive-β | — | TBD | TBD | ~1700 |
+| FastSI2E + adaptive-β | — | 28.6±23.6 ⚠️ | 30.0±36.5 ⚠️ | ~1900 |
 
 ---
 
@@ -139,10 +144,10 @@ python3 analyze_results.py   # prints this table live
 
 | Priority | Task | Est. time | Status |
 |----------|------|-----------|--------|
-| HIGH | Wait for Phase 2 (B–D) to complete | ~4h | 🔄 running |
+| ~~HIGH~~ | ~~Wait for Phase 2 (B–D) to complete~~ | — | ✅ done |
 | HIGH | Leiden + Infomap on RBD | ~2h | not started |
 | MED | Leiden + Infomap on KC-S3R2 (3→5 seeds) | ~2h | 3 seeds done |
-| MED | FastSI2E + adaptive-β KC/RBD | ~4h | queued in phase2 |
+| ~~MED~~ | ~~FastSI2E + adaptive-β KC/RBD~~ | — | ✅ done (negative result) |
 | LOW | Ablation with Leiden/Infomap (no_cluster, no_norm) | ~1h | not started |
 
 ### Paper writing (priority order)
