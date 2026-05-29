@@ -3,87 +3,78 @@
 
 ---
 
-## Summary of contributions
+## Executive Summary
 
-| Contribution | Status | Key result |
+We set out to beat the original SI2E (NeurIPS 2024) on both **accuracy** and **speed**.
+
+| Axis | Status | Best result |
 |---|---|---|
-| FastSI2E k-means (speed) | ✅ DONE | 4.0× faster, 100% on DK-8x8 |
-| FastSI2E Leiden | ✅ DONE | 2.8× faster, **+24 pp on KC-S3R2** |
-| FastSI2E Infomap | ✅ DONE | 3.2× faster, **+28 pp on KC-S3R2 (best overall)** |
-| Adaptive-β (stability) | ✅ DONE | RBD: 34%→53%, bimodal 2/5→4/5 |
-| FastSI2E on RBD | ✅ DONE | 50.4%±36.1 (comparable to SI2E) |
-| FastSI2E + adaptive-β | ✅ DONE | **NEGATIVE**: 28.6% KC, 30.0% RBD (worse than both components) |
-| PPO-SI2E (negative result) | ✅ DONE | 0% everywhere |
-| Paper draft | ✅ written | `paper_draft.md` |
-| Analysis & figures | ✅ done | `analyze_results.py --plot` |
+| Speed | ✅ | k-means: **4.0× faster** (488 → 1952 FPS) |
+| Accuracy (KC-S3R2) | ✅ | Infomap: **95.7%±5.8** vs SI2E 67.5%±27.9 (+28 pp) |
+| Accuracy (DK-8x8) | ✅ | All methods match SI2E 100% |
+| Accuracy (RBD-6x6) | ⚠️ | Adaptive-β original SI2E best: 53.4%±27.4 (SI2E was 55.7%) |
+| Paper | ✅ | `paper/main.pdf` — 5 pages, fully compiled |
+
+**Core story:** Replace the PartitionTree with graph community detection → simultaneously faster AND more accurate. Leiden/Infomap detect the multi-room topology that k-means' Euclidean distance misses.
 
 ---
 
-## Milestone 1 — FastSI2E Speed Benchmark ✅
+## Completed Experiments
+
+### M1 — Speed Benchmark ✅
 **DK-8x8, 1M frames, 3 seeds**
 
-| Method | FPS | Speedup |
-|--------|-----|---------|
-| SI2E (PartitionTree) | 488 | 1× |
-| FastSI2E (k-means) | 1952 | **4.0×** |
-| FastSI2E (Leiden) | 1364 | 2.8× |
-| FastSI2E (Infomap) | 1540 | 3.2× |
-
-Clustering subroutine: 155 ms → 1.5 ms (k-means) = **103× faster**.
-Overall 4× because env-stepping and network forward/backward now dominate.
+| Method | FPS | Speedup | Clustering cost |
+|--------|-----|---------|-----------------|
+| SI2E (PartitionTree) | 488 | 1× | ~155 ms |
+| FastSI2E k-means | 1952 | **4.0×** | ~1.5 ms |
+| FastSI2E Leiden | 1364 | 2.8× | ~27 ms |
+| FastSI2E Infomap | 1540 | 3.2× | ~24 ms |
 
 ---
 
-## Milestone 2 — DK-8x8 Accuracy at 3M Frames ✅
-**All methods match or exceed SI2E (100%) on DoorKey-8x8**
+### M2 — DK-8x8 Accuracy ✅
+**3M frames, 3–5 seeds — all fast methods match SI2E**
 
-| Method | s1 | s2 | s3 | Mean |
-|--------|----|----|-----|------|
-| SI2E | 100% | 100% | 100% | **100%±0** |
-| k-means | 100% | 100% | 100% | **100%±0** |
-| Leiden | 100% | 100% | 100% | **100%±0** |
-| Infomap | 98.5% | 100% | 100% | **99.5%±0.7** |
-
-Primary claim confirmed: FastSI2E (any method) = SI2E accuracy on DK-8x8 at 3–4× speed.
+| Method | Mean | Std |
+|--------|------|-----|
+| SI2E | 100.0% | 0.0 |
+| FastSI2E k-means | 100.0% | 0.0 |
+| FastSI2E Leiden | 100.0% | 0.0 |
+| FastSI2E Infomap | 99.5% | 0.7 |
 
 ---
 
-## Milestone 3 — KC-S3R2 Clustering Comparison ✅  
-**BREAKTHROUGH: Community detection outperforms original SI2E**
+### M3 — KC-S3R2 Clustering Comparison ✅
+**BREAKTHROUGH: Community detection beats original SI2E**
 
-| Method | s1 | s2 | s3 | s4 | s5 | Mean | Std |
-|--------|----|----|----|----|----|----|-----|
-| SI2E | 45% | 83% | 68% | 97% | 44% | 67.5% | 27.9 |
-| k-means | 25.5% | 100% | 11.0% | **100%** | **100%** | 67.3% | 40.3 |
-| **Leiden** | 75.5% | **100%** | **100%** | — | — | **91.8%** | **11.5** |
-| **Infomap** | 87.5% | **100%** | 99.5% | — | — | **95.7%** | **5.8** |
+| Method | N | Mean | Std | vs SI2E |
+|--------|---|------|-----|---------|
+| SI2E | 5 | 67.5% | 27.9 | — |
+| FastSI2E k-means | 5 | 67.3% | 40.3 | −0.2 pp |
+| **FastSI2E Leiden** | 3 | **91.8%** | **11.5** | **+24.3 pp** |
+| **FastSI2E Infomap** | 3 | **95.7%** | **5.8** | **+28.2 pp** |
 
-- Infomap: best result on KC-S3R2 of any method (+28.2 pp over SI2E, −22.1 pp std)
-- Leiden: second best (+24.3 pp over SI2E, −16.4 pp std)
-- k-means: same mean as SI2E but higher variance (bimodal: 3/5 converge)
-- **Both community detection algorithms beat SI2E while being 2.8–3.2× faster**
-
-Why Leiden/Infomap win: KC-S3R2 has multi-room topology with natural community structure (rooms). Graph modularity / random-walk compression detects this; Euclidean k-means misses it.
+Why: KC-S3R2 has multi-room topology. Leiden/Infomap find room-level communities directly via modularity/random-walk compression. k-means' Euclidean distance misses this structure.
 
 ---
 
-## Milestone 4 — Adaptive-β Stability ✅
-**Original SI2E + adaptive schedule on RBD and KC**
+### M4 — Adaptive-β Stability ✅
 
 | Method | Env | Mean | Std | Converge rate |
 |--------|-----|------|-----|---------------|
-| SI2E fixed-β | RBD | 34.0% | 40.1% | 2/5 |
-| **SI2E adaptive-β** | RBD | **53.4%** | **27.4%** | **4/5** |
-| SI2E fixed-β | KC | 45.5% | 39.0% | 3/5 |
-| SI2E adaptive-β | KC | 46.5% | 21.4% | varied |
+| SI2E fixed-β | RBD | 34.0% | 40.1 | 2/5 |
+| **SI2E adaptive-β** | RBD | **53.4%** | **27.4** | **4/5** |
+| SI2E fixed-β | KC | 67.5% | 27.9 | — |
+| SI2E adaptive-β | KC | 46.5% | 21.4 | — |
 
-Adaptive-β formula: `β_t = β₀ · max(0.1, 1 − recent_success_rate)`
+Formula: `β_t = β₀ · max(0.1, 1 − recent_success_rate)`
 
-Reduces over-exploration once the agent starts succeeding. Bimodal pattern softened on RBD: {1%, 1%, 1%, 81%, 85%} → {0%, 56%, 68%, 68%, 75%}.
+Note: adaptive-β *hurts* SI2E on KC (−21 pp). It helps on RBD where bimodal failure is the dominant problem.
 
 ---
 
-## Milestone 5 — PPO-SI2E Negative Result ✅
+### M5 — PPO-SI2E Negative Result ✅
 
 | Config | DK-8x8 | KC-S3R2 | RBD |
 |--------|---------|---------|-----|
@@ -91,122 +82,144 @@ Reduces over-exploration once the agent starts succeeding. Bimodal pattern softe
 | PPO-FastSI2E | — | 0% | — |
 | PPO-adaptive | — | — | 0.1% |
 
-PPO is categorically incompatible with SI2E's intrinsic bonus. Hypothesis: off-policy correction interacts with stale bonus across 4 PPO epochs → reward distribution shift. Documented as negative result for paper.
+Hypothesis: PPO's 4-epoch update creates reward-distribution shift with the once-per-rollout intrinsic bonus. Documented as negative result.
 
 ---
 
-## Milestone 6 — Phase 2 Experiments ✅ DONE
+### M6 — Phase 2 Experiments ✅ DONE
 
-### (A) KC-S3R2 FastSI2E seeds 4, 5 ✅
-- s4: **100%** at 1753 FPS
-- s5: **100%** at 1801 FPS
-- FastSI2E KC now 5 seeds: 25.5%, 100%, 11.0%, 100%, 100% → **67.3%±40.3**
+#### (A) KC-S3R2 FastSI2E extra seeds ✅
+- s4: 100%, s5: 100% → full 5-seed KC result: 67.3%±40.3
 
-### (B) RedBlueDoors FastSI2E s1–3 ✅
+#### (B) RBD FastSI2E k-means s1–3 ✅
 - s1: 68.5%, s2: 82.6%, s3: 0.0% → **50.4%±36.1**
-- FastSI2E k-means on RBD comparable to SI2E (55.7%±38.7) at 4× speed
-- Still bimodal: 2/3 seeds converge, 1/3 fails
+- Comparable to SI2E (55.7%), at 4× speed
+- Still bimodal (2/3 converge)
 
-### (C) FastSI2E + adaptive-β on KC-S3R2 s1–5 ✅ — NEGATIVE RESULT
-- s1: 7.5%, s2: 66.5%, s3: 37.0%, s4: 0.0%, s5: 32.0% → **28.6%±23.6**
-- **WORSE than FastSI2E alone (67.3%) and SI2E+adaptive (46.5%)**
-- Adaptive-β hurts when paired with noisy k-means clusters
+#### (C) FastSI2E + adaptive-β on KC s1–5 ✅ — NEGATIVE
+- 7.5%, 66.5%, 37.0%, 0.0%, 32.0% → **28.6%±23.6**
+- **Worse than FastSI2E alone (67.3%)** and SI2E+adaptive (46.5%)
 
-### (D) FastSI2E + adaptive-β on RBD s1–5 ✅ — NEGATIVE RESULT
-- s1: 73.5%, s2: 0.0%, s3: 0.5%, s4: 76.0%, s5: 0.0% → **30.0%±36.5**
-- **WORSE than SI2E+adaptive (53.4%±27.4)**
-- Same bimodal pattern; adaptive-β does not help here
-- Hypothesis: k-means cluster noise makes the success-rate signal unreliable for adaptive scheduling
+#### (D) FastSI2E + adaptive-β on RBD s1–5 ✅ — NEGATIVE
+- 73.5%, 0.0%, 0.5%, 76.0%, 0.0% → **30.0%±36.5**
+- **Worse than SI2E+adaptive (53.4%±27.4)**
+- Hypothesis: noisy k-means clusters make the success-rate signal unreliable for β scheduling
 
 ---
 
-## Current results table (all completed experiments)
-
-```
-python3 analyze_results.py   # prints this table live
-```
+## Full Results Table
 
 | Method | DK-8x8 | KC-S3R2 | RBD-6x6 | FPS |
 |--------|---------|---------|---------|-----|
 | VCSE (orig.) | 97.8±2.8 | 54.0±45.0 | 55.4±39.1 | ~1950 |
 | SI2E (orig.) | 100.0±0.0 | 67.5±27.9 | 55.7±38.7 | 488 |
-| **FastSI2E k-means** | **100.0±0.0** | 67.3±40.3 | 50.4±36.1 | **1952** |
-| FastSI2E Leiden | 100.0±0.0 | **91.8±11.5** | — | 1364 |
-| **FastSI2E Infomap** | 99.5±0.7 | **95.7±5.8** | — | **1540** |
+| FastSI2E k-means | **100.0±0.0** | 67.3±40.3 | 50.4±36.1 | **1952** |
+| FastSI2E Leiden | **100.0±0.0** | 91.8±11.5 | — | 1364 |
+| **FastSI2E Infomap** | 99.5±0.7 | **95.7±5.8** | — | 1540 |
 | SI2E + adaptive-β | — | 46.5±21.4 | **53.4±27.4** | 488 |
 | FastSI2E + adaptive-β | — | 28.6±23.6 ⚠️ | 30.0±36.5 ⚠️ | ~1900 |
 
 ---
 
-## TODO — Remaining work
+## Paper Status
 
-### Experiments still needed
+| File | Status |
+|------|--------|
+| `paper/main.tex` | ✅ written, all results filled |
+| `paper/main.pdf` | ✅ compiled, 5 pages |
+| `paper/references.bib` | ✅ 13 citations |
+| `paper/learning_curves.png` | ✅ 4-panel figure |
+| `paper/fps_comparison.png` | ✅ bar chart |
 
-| Priority | Task | Est. time | Status |
-|----------|------|-----------|--------|
-| ~~HIGH~~ | ~~Wait for Phase 2 (B–D) to complete~~ | — | ✅ done |
-| HIGH | Leiden + Infomap on RBD | ~2h | not started |
-| MED | Leiden + Infomap on KC-S3R2 (3→5 seeds) | ~2h | 3 seeds done |
-| ~~MED~~ | ~~FastSI2E + adaptive-β KC/RBD~~ | — | ✅ done (negative result) |
-| LOW | Ablation with Leiden/Infomap (no_cluster, no_norm) | ~1h | not started |
-
-### Paper writing (priority order)
-
-- [ ] **§2 Background** — add Leiden and Infomap citations + 1 paragraph each
-- [ ] **§3 Method** — revise from "k-means speedup" framing to "clustering algorithm comparison" framing; Infomap is now the headline
-- [ ] **§4.4 Main results** — fill Table 1 placeholders once Phase 2 (B–D) done
-- [ ] **§4.5 Ablations** — write up no_cluster (0%) and no_norm (22%) findings
-- [ ] **§4.6 Clustering comparison** — already drafted in `paper_draft.md`; add learning curves figure reference
-- [ ] **§5 Discussion** — why Leiden/Infomap win on multi-room tasks (graph topology argument)
-- [ ] **§6 Conclusion** — revise to lead with Infomap as best method
-
-### Analysis / figures
-
-- [ ] Re-run `python3 analyze_results.py --plot` after Phase 2 finishes to get RBD + adaptive-β curves
-- [ ] Add KC-S3R2 panel to learning curves with all 3 clustering methods (currently only k-means)
-- [ ] Run `python3 benchmark_fps.py --steps 5` for clean single-seed FPS measurements (no concurrent slowdown)
-- [ ] Add Leiden/Infomap to KC-S3R2 results (currently N=3; run more seeds if variance high)
-
-### Code cleanup
-
-- [ ] Fix `batch_phase2.sh` `run_pairs` bug already patched (`(( n > 0 )) && wait` → `if (( n > 0 )); then wait; fi`)
-- [ ] Consider adding Leiden/Infomap to RBD experiments via a `batch_phase3.sh`
+**Paper sections status:**
+- Abstract ✅
+- §1 Introduction ✅
+- §2 Background ✅ (VCSE, SI2E, PartitionTree)
+- §3 FastSI2E ✅ (k-means, Leiden, Infomap, adaptive-β algorithm box)
+- §4 Experiments ✅ (Table 1 filled, ablations, clustering comparison, FPS, learning curves, PPO negative)
+- §5 Discussion ✅ (k-means proxy argument, Leiden vs Infomap, adaptive-β+k-means incompatibility, bimodal, PPO)
+- §6 Conclusion ✅
+- References ✅
 
 ---
 
-## Active processes
+## TODO — Ranked by Impact on Paper
 
-| PID | Script | Task | Status |
-|-----|--------|------|--------|
-| 1503361 | batch_phase2.sh | RBD fast-si2e s1-3 → adapt KC → adapt RBD | 🔄 running |
+### HIGH PRIORITY — Missing data for complete paper
+
+| # | Task | Why important | Est. time | Status |
+|---|------|---------------|-----------|--------|
+| 1 | **Leiden + Infomap on RBD** (s1–3) | Paper Table 1 shows "---" for RBD Leiden/Infomap; need to know if community detection helps on RBD too | ~2h | not started |
+| 2 | **Extend KC-S3R2 Leiden + Infomap to 5 seeds** | Currently N=3; variance is large (11.5, 5.8); N=5 would be more credible for paper | ~2h | 3 seeds done |
+| 3 | **Adaptive-β + Infomap/Leiden on RBD** | If community detection fixes adaptive-β incompatibility, it's a strong finding | ~3h | not started |
+
+### MEDIUM PRIORITY — Figures and analysis
+
+| # | Task | Why | Est. time | Status |
+|---|------|-----|-----------|--------|
+| 4 | Re-run `python3 analyze_results.py --plot` after HIGH tasks done | Learning curves panel for KC needs all 3 clustering methods (currently k-means only) | 5 min | blocked on #1-2 |
+| 5 | Run `python3 benchmark_fps.py --steps 5` | Get clean single-seed FPS (current FPS from training logs, noisy due to concurrent seeds) | 15 min | not started |
+| 6 | Add KC-S3R2 Leiden/Infomap to learning curves figure | Currently only k-means on KC panel | 30 min | blocked on #2 |
+
+### LOW PRIORITY — Nice to have
+
+| # | Task | Why | Est. time | Status |
+|---|------|-----|-----------|--------|
+| 7 | Ablation with Leiden/Infomap (`no_cluster`, `no_norm`) | Currently ablations are k-means only; verify cluster bonus is load-bearing for all methods | ~1h | not started |
+| 8 | Fix `analyze_results.py` numpy RuntimeWarning (empty slice) | Cosmetic | 10 min | not started |
+
+### PAPER WRITING — After experiment gaps filled
+
+| # | Section | Task |
+|---|---------|------|
+| W1 | §4.4 Table 1 | Fill RBD column for Leiden/Infomap once task #1 done |
+| W2 | §4.6 Clustering comparison | Update Table 3 with 5-seed KC data (task #2) |
+| W3 | §4.3 Key findings | Add finding about whether adaptive-β works with Leiden/Infomap (task #3) |
+| W4 | §5 Discussion | Strengthen the "why community detection wins on multi-room tasks" argument with RBD data |
+| W5 | §6 Conclusion | Final pass once all results are in |
 
 ---
 
-## Key files
+## Recommended Next Step
+
+**Run batch_phase3.sh** to close the biggest paper gaps in one go:
+
+```bash
+# Phase 3: Leiden + Infomap on RBD; extend KC to 5 seeds
+# ~4h total, can run overnight
+nohup ./batch_phase3.sh > logs/phase3.log 2>&1 &
+```
+
+This would require creating `batch_phase3.sh` covering:
+- Leiden on RBD s1–3
+- Infomap on RBD s1–3
+- Leiden on KC-S3R2 s4–5 (extend from 3 to 5 seeds)
+- Infomap on KC-S3R2 s4–5
+- (optional) Infomap+adaptive-β on RBD s1–3
+
+After that, the paper would have a complete Table 1 with no "---" entries for the main methods.
+
+---
+
+## Key Files
 
 | File | Purpose |
 |------|---------|
-| `results/clustering-methods/summary.csv` | Leiden + Infomap results |
+| `results/clustering-methods/summary.csv` | Leiden + Infomap results (DK + KC, N=3) |
 | `results/fast-si2e/summary.csv` | k-means results (all envs/seeds) |
 | `results/adaptive-beta/summary.csv` | adaptive-β results |
-| `results/phase2/summary.csv` | RBD + adaptive fast-si2e (filling) |
-| `results/learning_curves.png` | 4-panel figure |
-| `results/fps_comparison.png` | FPS bar chart |
+| `results/phase2/summary.csv` | RBD fast-si2e, fast+adaptive KC/RBD |
+| `paper/main.tex` | Full paper |
+| `paper/main.pdf` | Compiled PDF (5 pages) |
 | `analyze_results.py` | Run to regenerate all tables + figures |
-| `paper_draft.md` | Full paper skeleton |
-| `batch_phase2.sh` | Phase 2 runner (B–D) |
+| `batch_phase2.sh` | Phase 2 runner (complete) |
 
 ---
 
-## Revised paper framing
+## Negative Results (all documented in paper)
 
-**Old framing:** "FastSI2E: 4× faster via k-means"
-**New framing:** "Graph Clustering Algorithms for SI2E: Infomap/Leiden are faster AND more accurate than the original PartitionTree"
-
-**Key claims to make:**
-1. Any graph clustering method replaces PartitionTree: 2.8–4× speedup on all tasks
-2. Infomap: 95.7%±5.8 on KC-S3R2 vs SI2E 67.5%±27.9 — new SOTA on this benchmark
-3. Why: community detection algorithms find multi-room topology that k-means misses
-4. Adaptive-β: stabilises bimodal convergence on RBD (2/5 → 4/5 seeds)
-5. Ablations: cluster-level bonus is load-bearing (no_cluster → 0%)
-6. Negative: PPO incompatible (documented)
+| Experiment | Result | Hypothesis |
+|---|---|---|
+| PPO + SI2E (any variant) | 0% everywhere | 4-epoch update causes reward-distribution shift with stale bonus |
+| FastSI2E k-means + adaptive-β | Worse than either alone on KC and RBD | Noisy k-means clusters make success-rate signal unreliable for β scheduling |
+| k-means on KC-S3R2 (bimodal) | 3/5 seeds converge, 2/5 fail near 0% | Euclidean clustering misses multi-room community structure |

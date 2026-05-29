@@ -251,7 +251,8 @@ if len(clust_methods) > 1:
     print('\n' + '='*80)
     print('CLUSTERING METHOD COMPARISON')
     print('='*80)
-    ref_kmeans = {e: np.mean(sr_data[e].get('fast-si2e', [])) for e in all_envs}
+    ref_kmeans = {e: (np.mean(sr_data[e]['fast-si2e']) if sr_data[e].get('fast-si2e') else float('nan'))
+                  for e in all_envs}
     for m in clust_methods:
         fps_vals = all_fps.get(m, [])
         fps_str  = f'{np.mean(fps_vals):.0f} FPS' if fps_vals else '— FPS'
