@@ -26,11 +26,13 @@ env = utils.make_env(args.env, 0)
 obs_space, preprocess_obss = utils.get_obss_preprocessor(env.observation_space)
 
 variants = [
-    ('baseline',        dict(algo='a2c')),
-    ('a2c-si2e',        dict(algo='a2c', use_entropy_reward=True, use_value_condition=True)),
-    ('a2c-fast-si2e',   dict(algo='a2c', use_entropy_reward=True, use_value_condition=True, fast_se=True)),
-    ('ppo-si2e',        dict(algo='ppo', use_entropy_reward=True, use_value_condition=True)),
-    ('ppo-fast-si2e',   dict(algo='ppo', use_entropy_reward=True, use_value_condition=True, fast_se=True)),
+    ('baseline',             dict(algo='a2c')),
+    ('a2c-si2e',             dict(algo='a2c', use_entropy_reward=True, use_value_condition=True)),
+    ('a2c-fast-si2e-kmeans', dict(algo='a2c', use_entropy_reward=True, use_value_condition=True, fast_se=True, cluster_method='kmeans')),
+    ('a2c-fast-si2e-leiden', dict(algo='a2c', use_entropy_reward=True, use_value_condition=True, fast_se=True, cluster_method='leiden')),
+    ('a2c-fast-si2e-infomap',dict(algo='a2c', use_entropy_reward=True, use_value_condition=True, fast_se=True, cluster_method='infomap')),
+    ('ppo-si2e',             dict(algo='ppo', use_entropy_reward=True, use_value_condition=True)),
+    ('ppo-fast-si2e',        dict(algo='ppo', use_entropy_reward=True, use_value_condition=True, fast_se=True, cluster_method='kmeans')),
 ]
 
 print(f"Benchmarking on {args.env} with {args.procs} procs ({args.steps} warmup+timed runs)")
@@ -42,17 +44,18 @@ for name, cfg in variants:
     acmodel = ACModel(obs_space, env.action_space, False, False).to('cuda:0')
     envs = [utils.make_env(args.env, i * 1000) for i in range(args.procs)]
 
-    use_fast = cfg.get('fast_se', False)
+    use_fast      = cfg.get('fast_se', False)
+    cluster_meth  = cfg.get('cluster_method', 'kmeans')
     if cfg['algo'] == 'ppo':
         algo = torch_ac.PPOAlgo(envs, acmodel, 'cuda:0', preprocess_obss=preprocess_obss,
                                  use_entropy_reward=cfg.get('use_entropy_reward', False),
                                  use_value_condition=cfg.get('use_value_condition', False),
-                                 fast_se=use_fast)
+                                 fast_se=use_fast, cluster_method=cluster_meth)
     else:
         algo = torch_ac.A2CAlgo(envs, acmodel, 'cuda:0', preprocess_obss=preprocess_obss,
                                   use_entropy_reward=cfg.get('use_entropy_reward', False),
                                   use_value_condition=cfg.get('use_value_condition', False),
-                                  fast_se=use_fast)
+                                  fast_se=use_fast, cluster_method=cluster_meth)
     algo.beta = 0.005
     algo.use_batch = True
     algo.replay_buffer = np.zeros((10000, 64))

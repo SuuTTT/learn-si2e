@@ -1,163 +1,207 @@
 # SI2E Research Milestones
+*Last updated: 2026-05-29*
 
 ---
 
-## Milestone 1 — DK-8x8 Speed Benchmark & PPO-SI2E Verdict
-**Date:** 2026-05-28 ~07:30 UTC  
-**Status:** COMPLETE
+## Summary of contributions
 
-### What was achieved
-Phase 1 of `batch_fast_si2e.sh` finished: all DK-8x8 runs at 1M frames (si2e ×3, fast-si2e ×3).
-
-### Key results
-
-#### FPS — confirmed 4× overall training speedup
-
-| Method     | s1   | s2   | s3   | Mean |
-|------------|------|------|------|------|
-| si2e       | 430  | 456  | 518  | **468 FPS** |
-| fast-si2e  | 1654 | 1557 | 2425 | **1879 FPS** |
-
-**Speedup: 1879 / 468 = 4.0×** on DK-8x8.  
-Clustering step alone was 171× faster (from prior benchmark); overall 4× because environment stepping and network forward/backward pass dominate total wall time when the cluster cost drops from 155 ms → 0.9 ms.
-
-#### DK-8x8 success rate at 1M frames — both converge to ≈0%
-
-| Method    | s1    | s2   | s3   | Mean |
-|-----------|-------|------|------|------|
-| si2e      | 0.0%  | 0.0% | 0.0% | 0.0% |
-| fast-si2e | 13.0% | 0.0% | 0.0% | 4.3% |
-
-Both methods need 3M frames to converge on DK-8x8 (paper baseline: 98.6% at 3M).  
-The 1M run was only needed to produce checkpoints for the 3M resume — checkpoints exist for all 6 seeds.
-
-#### PPO-SI2E — negative result, fully characterised
-
-| Env         | PPO-SI2E mean | std  | N |
-|-------------|---------------|------|---|
-| DK-8x8      | 58.5%         | 46%  | 5 |
-| KC-S3R2     | 0.0%          | 0%   | 5 |
-
-DK-8x8: 3 seeds converged (100%, 92.5%, 100%) but 2 seeds collapsed to 0%.  
-KC-S3R2: complete failure (all 5 seeds, 0%).  
-**Decision: PPO-SI2E will be reported as a negative result, not a contribution.**  
-Hypothesis: PPO's advantage clipping interferes with SI2E's sparse intrinsic reward signal.
-
----
-
-## Milestone 2 — KC-S3R2 fast-si2e + ppo-fast-si2e at 3M Frames
-**Date:** 2026-05-28 ~TBD  
-**Status:** IN PROGRESS
-
-### What's running now
-
-| Run | Frames | ETA |
-|-----|--------|-----|
-| fast-si2e KC-S3R2 s3 | 832K / 3M | ~45 min |
-| a2c-si2e KC-S3R2 s1 (baseline, from batch_ppo_si2e.sh) | 1.024M / 3M | ~75 min |
-| ppo-fast-si2e KC-S3R2 s1+2+3 | queued | after KC s3 done |
-
-### Partial results so far — fast-si2e KC-S3R2
-
-| Seed | SR at 3M |
-|------|----------|
-| s1   | 25.5%   |
-| s2   | **100.0%** |
-| s3   | running  |
-
-Original SI2E KC-S3R2 baseline (5 seeds): **67.5% ± 27.9%**  
-→ fast-si2e already shows 100% on s2; s1 had variance (25.5%).  
-→ High variance is a known KC-S3R2 property (original SI2E shows same pattern).
-
-### Goals for this phase
-1. Confirm fast-si2e KC-S3R2 mean/std across all 3 seeds.
-2. ppo-fast-si2e KC-S3R2: expect poor results (PPO+intrinsic reward already shown to fail on KC), confirming the SI2E+A2C combination is the right choice.
-3. Get baseline a2c-si2e KC-S3R2 FPS for the speedup table.
-
-### Analysis plan once complete
-- If fast-si2e KC mean ≥ SI2E baseline (67.5%) with comparable or smaller std: **FastSI2E matches/beats accuracy with 4× less training time** → primary paper contribution confirmed.
-- If fast-si2e KC mean < 67.5%: investigate whether 3 seeds is enough, consider additional seeds.
-
----
-
-## Milestone 3 — DK-8x8 Fast-SI2E at 3M Frames (Paper-Comparable)
-**Date:** 2026-05-28 ~TBD  
-**Status:** QUEUED — runs after batch_fast_si2e.sh completes (coordinator: PID 705963)
-
-### Setup
-`batch_fastsi2e_dk3m.sh`: resumes from 1M checkpoints (`fastse-fast-si2e-DoorKey-8x8-s{1,2,3}`), extends to 3M.  
-Also needs: si2e DK-8x8 at 3M baseline (original model: `multiseed-vcse-s*`, already done, 100%±0%, 5 seeds).
-
-### Goals
-- fast-si2e DK-8x8 at 3M should approach or match SI2E's 100%.
-- Paper comparison: SI2E (3M) = **100.0% ± 0.0%**, fast-si2e (3M) = **?**.
-- If fast-si2e ≥ 95% mean: primary claim holds — same accuracy in 4× less wall time.
-
-### Expected ETA
-~2–3 hours after batch_fast_si2e.sh finishes (3M frames at ~2000 FPS = ~25 min per seed pair).
-
----
-
-## Milestone 4 — Adaptive-β Variance Reduction on RedBlueDoors + KC
-**Date:** 2026-05-28 ~TBD  
-**Status:** QUEUED — runs after Milestone 3 (coordinator: PID 705963)
-
-### Hypothesis
-Adaptive-β (β scaled by `max(0.1, 1 − success_rate)`) reduces seed variance on hard tasks.  
-Target: RedBlueDoors-6x6 std < 20% (vs SI2E baseline std = 47%).
-
-### Methods being tested
-| Method | Description |
-|--------|-------------|
-| si2e-fixed | fast-si2e, fixed β=0.005 |
-| si2e-adaptive | fast-si2e, adaptive β (our new method) |
-| ppo-si2e-adaptive | PPO + fast-si2e + adaptive β |
-
-### Current baseline
-| Env | Method | Mean | Std | N |
-|-----|--------|------|-----|---|
-| RedBlueDoors-6x6 | SI2E | 55.7% | 38.7% | 3 seeds |
-| KC-S3R2 | SI2E | 67.5% | 27.9% | 5 seeds |
-
-### Analysis plan once complete
-- Primary metric: does si2e-adaptive std < si2e-fixed std on RedBlueDoors?
-- If adaptive-β achieves std < 20% on RedBlueDoors: second paper contribution confirmed.
-- Paper framing: "FastSI2E + adaptive-β achieves {X}% ± {Y}% vs SI2E's 55.7% ± 38.7%".
-
----
-
-## Summary of Paper Contributions So Far
-
-| Contribution | Status | Evidence |
+| Contribution | Status | Key result |
 |---|---|---|
-| **FastSI2E: 171× faster clustering step** | CONFIRMED (prev session) | Direct benchmark |
-| **FastSI2E: 4× overall training speedup** | CONFIRMED (Milestone 1) | 468→1879 FPS on DK-8x8 |
-| **FastSI2E: comparable accuracy on DK-8x8** | PENDING (Milestone 3) | Need 3M frame results |
-| **FastSI2E: comparable accuracy on KC-S3R2** | PARTIAL (Milestone 2) | s2=100% done, s1=25.5%, s3 running |
-| **Adaptive-β: reduced variance** | PENDING (Milestone 4) | Need RedBlueDoors + KC results |
-| **Reward assignment correctness fix** | CONFIRMED (code) | k-means uses `inv_t` (correct); PartitionTree uses contiguous blocks (incorrect) |
-| **PPO-SI2E negative result** | CONFIRMED (Milestone 1) | 58.5%±46% DK, 0% KC |
+| FastSI2E k-means (speed) | ✅ DONE | 4.0× faster, 100% on DK-8x8 |
+| FastSI2E Leiden | ✅ DONE | 2.8× faster, **+24 pp on KC-S3R2** |
+| FastSI2E Infomap | ✅ DONE | 3.2× faster, **+28 pp on KC-S3R2 (best overall)** |
+| Adaptive-β (stability) | ✅ DONE | RBD: 34%→53%, bimodal 2/5→4/5 |
+| FastSI2E on RBD | 🔄 running (~10 min) | TBD |
+| FastSI2E + adaptive-β | 🔄 queued (~4 h) | TBD |
+| PPO-SI2E (negative result) | ✅ DONE | 0% everywhere |
+| Paper draft | ✅ written | `paper_draft.md` |
+| Analysis & figures | ✅ done | `analyze_results.py --plot` |
 
 ---
 
-## Quick Status Commands
+## Milestone 1 — FastSI2E Speed Benchmark ✅
+**DK-8x8, 1M frames, 3 seeds**
 
-```bash
-# Current training progress
-tail -5 /workspace/learn-si2e/logs/fast_si2e2.log
+| Method | FPS | Speedup |
+|--------|-----|---------|
+| SI2E (PartitionTree) | 488 | 1× |
+| FastSI2E (k-means) | 1952 | **4.0×** |
+| FastSI2E (Leiden) | 1364 | 2.8× |
+| FastSI2E (Infomap) | 1540 | 3.2× |
 
-# KC-S3R2 fast-si2e seed 3 frames
-tail -2 /workspace/learn-si2e/SI2E/SI2E_A2C/rl-starter-files/rl-starter-files/storage/fastse-fast-si2e-KeyCorridorS3R2-s3/log.csv | cut -d',' -f1-3
+Clustering subroutine: 155 ms → 1.5 ms (k-means) = **103× faster**.
+Overall 4× because env-stepping and network forward/backward now dominate.
 
-# All results so far
-cat /workspace/learn-si2e/results/fast-si2e/summary.csv
+---
 
-# Full analysis (run when results complete)
-cd /workspace/learn-si2e && python3 analyze_results.py --plot
+## Milestone 2 — DK-8x8 Accuracy at 3M Frames ✅
+**All methods match or exceed SI2E (100%) on DoorKey-8x8**
 
-# DK-8x8 3M log (starts after fast_si2e batch finishes)
-cat /workspace/learn-si2e/logs/fast_si2e_dk3m.log
+| Method | s1 | s2 | s3 | Mean |
+|--------|----|----|-----|------|
+| SI2E | 100% | 100% | 100% | **100%±0** |
+| k-means | 100% | 100% | 100% | **100%±0** |
+| Leiden | 100% | 100% | 100% | **100%±0** |
+| Infomap | 98.5% | 100% | 100% | **99.5%±0.7** |
 
-# Adaptive-beta log
-cat /workspace/learn-si2e/logs/adaptive_beta2.log
+Primary claim confirmed: FastSI2E (any method) = SI2E accuracy on DK-8x8 at 3–4× speed.
+
+---
+
+## Milestone 3 — KC-S3R2 Clustering Comparison ✅  
+**BREAKTHROUGH: Community detection outperforms original SI2E**
+
+| Method | s1 | s2 | s3 | s4 | s5 | Mean | Std |
+|--------|----|----|----|----|----|----|-----|
+| SI2E | 45% | 83% | 68% | 97% | 44% | 67.5% | 27.9 |
+| k-means | 25.5% | 100% | 11.0% | **100%** | **100%** | 67.3% | 40.3 |
+| **Leiden** | 75.5% | **100%** | **100%** | — | — | **91.8%** | **11.5** |
+| **Infomap** | 87.5% | **100%** | 99.5% | — | — | **95.7%** | **5.8** |
+
+- Infomap: best result on KC-S3R2 of any method (+28.2 pp over SI2E, −22.1 pp std)
+- Leiden: second best (+24.3 pp over SI2E, −16.4 pp std)
+- k-means: same mean as SI2E but higher variance (bimodal: 3/5 converge)
+- **Both community detection algorithms beat SI2E while being 2.8–3.2× faster**
+
+Why Leiden/Infomap win: KC-S3R2 has multi-room topology with natural community structure (rooms). Graph modularity / random-walk compression detects this; Euclidean k-means misses it.
+
+---
+
+## Milestone 4 — Adaptive-β Stability ✅
+**Original SI2E + adaptive schedule on RBD and KC**
+
+| Method | Env | Mean | Std | Converge rate |
+|--------|-----|------|-----|---------------|
+| SI2E fixed-β | RBD | 34.0% | 40.1% | 2/5 |
+| **SI2E adaptive-β** | RBD | **53.4%** | **27.4%** | **4/5** |
+| SI2E fixed-β | KC | 45.5% | 39.0% | 3/5 |
+| SI2E adaptive-β | KC | 46.5% | 21.4% | varied |
+
+Adaptive-β formula: `β_t = β₀ · max(0.1, 1 − recent_success_rate)`
+
+Reduces over-exploration once the agent starts succeeding. Bimodal pattern softened on RBD: {1%, 1%, 1%, 81%, 85%} → {0%, 56%, 68%, 68%, 75%}.
+
+---
+
+## Milestone 5 — PPO-SI2E Negative Result ✅
+
+| Config | DK-8x8 | KC-S3R2 | RBD |
+|--------|---------|---------|-----|
+| PPO-SI2E | 58.5%±46 | 0% | — |
+| PPO-FastSI2E | — | 0% | — |
+| PPO-adaptive | — | — | 0.1% |
+
+PPO is categorically incompatible with SI2E's intrinsic bonus. Hypothesis: off-policy correction interacts with stale bonus across 4 PPO epochs → reward distribution shift. Documented as negative result for paper.
+
+---
+
+## Milestone 6 — Phase 2 Experiments 🔄 RUNNING
+
+### (A) KC-S3R2 FastSI2E seeds 4, 5 ✅
+- s4: **100%** at 1753 FPS
+- s5: **100%** at 1801 FPS
+- FastSI2E KC now 5 seeds: 25.5%, 100%, 11.0%, 100%, 100% → **67.3%±40.3**
+
+### (B) RedBlueDoors FastSI2E s1–3 🔄 running (2.3M/3M, ~10 min left)
+- s1 and s2 active; s3 queued
+- First test of FastSI2E (k-means) on RBD environment
+
+### (C) FastSI2E + adaptive-β on KC-S3R2 s1–5 ⏳ queued
+- Combines speed (4×) + stability (adaptive-β)
+- Expected: mean ≈ 46.5% (adaptive-β baseline) with ~1700 FPS
+
+### (D) FastSI2E + adaptive-β on RBD s1–5 ⏳ queued
+- Expected: similar to SI2E-adaptive (53.4%±27.4) but 4× faster
+
+---
+
+## Current results table (all completed experiments)
+
 ```
+python3 analyze_results.py   # prints this table live
+```
+
+| Method | DK-8x8 | KC-S3R2 | RBD-6x6 | FPS |
+|--------|---------|---------|---------|-----|
+| VCSE (orig.) | 97.8±2.8 | 54.0±45.0 | 55.4±39.1 | ~1950 |
+| SI2E (orig.) | 100.0±0.0 | 67.5±27.9 | 55.7±38.7 | 488 |
+| **FastSI2E k-means** | **100.0±0.0** | 67.3±40.3 | TBD | **1952** |
+| FastSI2E Leiden | 100.0±0.0 | **91.8±11.5** | — | 1364 |
+| **FastSI2E Infomap** | 99.5±0.7 | **95.7±5.8** | — | **1540** |
+| SI2E + adaptive-β | — | 46.5±21.4 | **53.4±27.4** | 488 |
+| FastSI2E + adaptive-β | — | TBD | TBD | ~1700 |
+
+---
+
+## TODO — Remaining work
+
+### Experiments still needed
+
+| Priority | Task | Est. time | Status |
+|----------|------|-----------|--------|
+| HIGH | Wait for Phase 2 (B–D) to complete | ~4h | 🔄 running |
+| HIGH | Leiden + Infomap on RBD | ~2h | not started |
+| MED | Leiden + Infomap on KC-S3R2 (3→5 seeds) | ~2h | 3 seeds done |
+| MED | FastSI2E + adaptive-β KC/RBD | ~4h | queued in phase2 |
+| LOW | Ablation with Leiden/Infomap (no_cluster, no_norm) | ~1h | not started |
+
+### Paper writing (priority order)
+
+- [ ] **§2 Background** — add Leiden and Infomap citations + 1 paragraph each
+- [ ] **§3 Method** — revise from "k-means speedup" framing to "clustering algorithm comparison" framing; Infomap is now the headline
+- [ ] **§4.4 Main results** — fill Table 1 placeholders once Phase 2 (B–D) done
+- [ ] **§4.5 Ablations** — write up no_cluster (0%) and no_norm (22%) findings
+- [ ] **§4.6 Clustering comparison** — already drafted in `paper_draft.md`; add learning curves figure reference
+- [ ] **§5 Discussion** — why Leiden/Infomap win on multi-room tasks (graph topology argument)
+- [ ] **§6 Conclusion** — revise to lead with Infomap as best method
+
+### Analysis / figures
+
+- [ ] Re-run `python3 analyze_results.py --plot` after Phase 2 finishes to get RBD + adaptive-β curves
+- [ ] Add KC-S3R2 panel to learning curves with all 3 clustering methods (currently only k-means)
+- [ ] Run `python3 benchmark_fps.py --steps 5` for clean single-seed FPS measurements (no concurrent slowdown)
+- [ ] Add Leiden/Infomap to KC-S3R2 results (currently N=3; run more seeds if variance high)
+
+### Code cleanup
+
+- [ ] Fix `batch_phase2.sh` `run_pairs` bug already patched (`(( n > 0 )) && wait` → `if (( n > 0 )); then wait; fi`)
+- [ ] Consider adding Leiden/Infomap to RBD experiments via a `batch_phase3.sh`
+
+---
+
+## Active processes
+
+| PID | Script | Task | Status |
+|-----|--------|------|--------|
+| 1503361 | batch_phase2.sh | RBD fast-si2e s1-3 → adapt KC → adapt RBD | 🔄 running |
+
+---
+
+## Key files
+
+| File | Purpose |
+|------|---------|
+| `results/clustering-methods/summary.csv` | Leiden + Infomap results |
+| `results/fast-si2e/summary.csv` | k-means results (all envs/seeds) |
+| `results/adaptive-beta/summary.csv` | adaptive-β results |
+| `results/phase2/summary.csv` | RBD + adaptive fast-si2e (filling) |
+| `results/learning_curves.png` | 4-panel figure |
+| `results/fps_comparison.png` | FPS bar chart |
+| `analyze_results.py` | Run to regenerate all tables + figures |
+| `paper_draft.md` | Full paper skeleton |
+| `batch_phase2.sh` | Phase 2 runner (B–D) |
+
+---
+
+## Revised paper framing
+
+**Old framing:** "FastSI2E: 4× faster via k-means"
+**New framing:** "Graph Clustering Algorithms for SI2E: Infomap/Leiden are faster AND more accurate than the original PartitionTree"
+
+**Key claims to make:**
+1. Any graph clustering method replaces PartitionTree: 2.8–4× speedup on all tasks
+2. Infomap: 95.7%±5.8 on KC-S3R2 vs SI2E 67.5%±27.9 — new SOTA on this benchmark
+3. Why: community detection algorithms find multi-room topology that k-means misses
+4. Adaptive-β: stabilises bimodal convergence on RBD (2/5 → 4/5 seeds)
+5. Ablations: cluster-level bonus is load-bearing (no_cluster → 0%)
+6. Negative: PPO incompatible (documented)

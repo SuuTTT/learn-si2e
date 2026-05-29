@@ -9,3 +9,8 @@ ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,2,0.00,2944000
 ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,3,0.00,2944000
 ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,4,0.00,2944000
 ppo-si2e,MiniGrid-KeyCorridorS3R2-v0,5,0.00,2944000
+a2c-si2e,MiniGrid-KeyCorridorS3R2-v0,1,5.00,2944000
+a2c-si2e,MiniGrid-KeyCorridorS3R2-v0,2,100.00,2944000
+a2c-si2e,MiniGrid-KeyCorridorS3R2-v0,3,97.01,2944000
+a2c-si2e,MiniGrid-KeyCorridorS3R2-v0,4,78.00,2944000
+a2c-si2e,MiniGrid-KeyCorridorS3R2-v0,5,99.00,2944000

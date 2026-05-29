@@ -1,0 +1,8 @@
+method,env,seed,success_rate_pct,fps
+fastse-rbd-fast-si2e,MiniGrid-RedBlueDoors-6x6-v0,2,82.59,1872
+fastse-rbd-fast-si2e,MiniGrid-RedBlueDoors-6x6-v0,1,68.50,1744
+fastse-rbd-fast-si2e,MiniGrid-RedBlueDoors-6x6-v0,3,0.00,2739
+fastse-adapt-kc,MiniGrid-KeyCorridorS3R2-v0,2,66.50,1985
+fastse-adapt-kc,MiniGrid-KeyCorridorS3R2-v0,1,7.50,2004
+fastse-adapt-kc,MiniGrid-KeyCorridorS3R2-v0,4,0.00,1730
+fastse-adapt-kc,MiniGrid-KeyCorridorS3R2-v0,3,37.00,1782

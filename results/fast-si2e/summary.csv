@@ -8,3 +8,11 @@ fast-si2e,MiniGrid-DoorKey-8x8-v0,3,0.00,2650
 fast-si2e,MiniGrid-KeyCorridorS3R2-v0,1,25.50,1975
 fast-si2e,MiniGrid-KeyCorridorS3R2-v0,2,100.00,1812
 fast-si2e,MiniGrid-KeyCorridorS3R2-v0,3,10.95,2674
+ppo-fast-si2e,MiniGrid-KeyCorridorS3R2-v0,1,0.00,1229
+ppo-fast-si2e,MiniGrid-KeyCorridorS3R2-v0,2,0.00,1135
+ppo-fast-si2e,MiniGrid-KeyCorridorS3R2-v0,3,0.00,1918
+fast-si2e,MiniGrid-DoorKey-8x8-v0,2,100.00,1538
+fast-si2e,MiniGrid-DoorKey-8x8-v0,1,100.00,1664
+fast-si2e,MiniGrid-DoorKey-8x8-v0,3,100.00,2397
+fastse-fast-si2e,MiniGrid-KeyCorridorS3R2-v0,5,100.00,1801
+fastse-fast-si2e,MiniGrid-KeyCorridorS3R2-v0,4,100.00,1753

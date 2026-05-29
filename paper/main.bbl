@@ -1,0 +1,47 @@
+\begin{thebibliography}{6}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Anonymous(2024)]{si2e2024}
+Anonymous.
+\newblock Structural information guided exploration for sparse reward
+  reinforcement learning.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2024.
+\newblock NeurIPS 2024.
+
+\bibitem[Chevalier-Boisvert et~al.(2023)Chevalier-Boisvert, Willems, and
+  Pal]{minigrid2023}
+Maxime Chevalier-Boisvert, Lucas Willems, and Suman Pal.
+\newblock {MiniGrid}: Lightweight gridworld environments for reinforcement
+  learning.
+\newblock \emph{arXiv preprint arXiv:2306.13831}, 2023.
+
+\bibitem[Mnih et~al.(2016)Mnih, Badia, Mirza, Graves, Lillicrap, Harley,
+  Silver, and Kavukcuoglu]{a2c2016}
+Volodymyr Mnih, Adri{\`a}~Puigdom{\`e}nech Badia, Mehdi Mirza, Alex Graves,
+  Timothy Lillicrap, Tim Harley, David Silver, and Koray Kavukcuoglu.
+\newblock Asynchronous methods for deep reinforcement learning.
+\newblock \emph{arXiv preprint arXiv:1602.01783}, 2016.
+
+\bibitem[Rosvall and Bergstrom(2008)]{infomap2008}
+Martin Rosvall and Carl~T Bergstrom.
+\newblock Maps of random walks on complex networks reveal community structure.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 105\penalty0
+  (4):\penalty0 1118--1123, 2008.
+
+\bibitem[Traag et~al.(2019)Traag, Waltman, and van Eck]{leiden2019}
+Vincent~A Traag, Ludo Waltman, and Nees~Jan van Eck.
+\newblock From {Louvain} to {Leiden}: guaranteeing well-connected communities.
+\newblock \emph{Scientific Reports}, 9\penalty0 (1):\penalty0 5233, 2019.
+
+\bibitem[Yuan et~al.(2022)Yuan, Lu, Yao, Yan, Luo, and Si]{vcse2022}
+Mengjiao Yuan, Zichen Lu, Wenzhao Yao, Yunpeng Yan, Zhenyu Luo, and Jiawei Si.
+\newblock Don't change the algorithm, change the data: Exploratory data for
+  offline reinforcement learning.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2022.
+\newblock VCSE.
+
+\end{thebibliography}

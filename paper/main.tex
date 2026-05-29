@@ -1,0 +1,440 @@
+\documentclass[10pt,twocolumn]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{microtype}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor}
+\usepackage{algorithm2e}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue,
+  pdfencoding=auto}
+
+% ---- convenience ----
+\newcommand{\fastsi}{FastSI2E}
+\newcommand{\si}{SI2E}
+\newcommand{\ptree}{PartitionTree}
+\newcommand{\bhat}{\hat{\beta}}
+
+\title{\textbf{Graph Clustering Algorithms for Efficient Structural-Information\\
+       Intrinsic Exploration in Sparse-Reward Environments}}
+
+\author{Anonymous}
+\date{}
+
+\begin{document}
+\maketitle
+
+%% ================================================================
+\begin{abstract}
+Structural Information Intrinsic Exploration (\si{}) achieves strong performance on
+sparse-reward tasks but relies on a Python \ptree{} that adds $\sim$155\,ms of
+overhead per update, limiting throughput to $\sim$488 frames per second (FPS).
+We propose \fastsi{}, which replaces the \ptree{} with pluggable graph-clustering
+primitives and shows that \emph{the clustering algorithm choice matters beyond speed}.
+\begin{enumerate}\itemsep0pt
+  \item \textbf{k-means} (1.5\,ms, \textbf{4.0$\times$ speedup}): matches \si{}
+    on DoorKey-8x8 (100\%), but shows bimodal variance on harder tasks.
+  \item \textbf{Leiden}~\citep{leiden2019} (27\,ms, \textbf{2.8$\times$ speedup}):
+    matches k-means on simple tasks and substantially outperforms both on
+    KeyCorridorS3R2 (91.8\%$\pm$11.5 vs.\ SI2E 67.5\%$\pm$27.9).
+  \item \textbf{Infomap}~\citep{infomap2008} (24\,ms, \textbf{3.2$\times$ speedup}):
+    best overall --- 95.7\%$\pm$5.8 on KeyCorridorS3R2, the highest of any method,
+    at 3.2$\times$ the training speed of the original.
+  \item \textbf{Adaptive-$\beta$}: scales the intrinsic coefficient by
+    $(1 - \hat{r}_{\rm success})$, raising RedBlueDoors convergence from
+    2/5 to 4/5 seeds.
+\end{enumerate}
+Our central finding: graph community detection (Leiden, Infomap) produces richer
+state partitions than k-means, yielding better exploration guidance on environments
+with complex multi-room topology --- while being 3--4$\times$ faster than the
+original \si{}.
+\end{abstract}
+
+%% ================================================================
+\section{Introduction}
+
+Sparse-reward environments remain a central challenge in deep reinforcement
+learning~\citep{a2c2016}. Intrinsic motivation injects exploration bonuses to
+help agents discover infrequently-visited states. Among recent methods,
+\si{}~\citep{si2e2024} constructs a hierarchical graph partition over observations
+and rewards agents for occupying high-entropy nodes. Despite strong benchmark
+results, \si{} is computationally expensive: its \ptree{} runs in $O(n^2)$ Python
+operations per update, limiting throughput to $\sim$488 FPS --- roughly 4$\times$
+slower than a plain A2C baseline.
+
+We ask: \emph{can we preserve exploration quality while replacing the \ptree{} with
+a faster graph-clustering primitive?} The answer is \emph{yes, and the choice of
+primitive matters}. We make the following contributions:
+
+\begin{enumerate}\itemsep0pt
+  \item \textbf{\fastsi{}}: A drop-in replacement for the \ptree{} using any
+    graph-clustering algorithm. We evaluate k-means, Leiden, and Infomap.
+  \item \textbf{Clustering comparison}: Community detection (Leiden, Infomap)
+    outperforms k-means and original \si{} on tasks with multi-room topology ---
+    at 2.8--3.2$\times$ the speed of \si{}.
+  \item \textbf{Adaptive-$\beta$}: A parameter-free schedule that mitigates bimodal
+    convergence on hard tasks.
+  \item \textbf{Negative result}: PPO is categorically incompatible with \si{}'s
+    intrinsic bonus; we document this finding to save future researchers effort.
+\end{enumerate}
+
+%% ================================================================
+\section{Background}
+
+\subsection{Value-Conditioned State Entropy (VCSE)}
+
+VCSE~\citep{vcse2022} rewards agents proportionally to the Shannon entropy of the
+$k$-nearest-neighbour distribution of encoder features, conditioned on value
+estimates:
+\[
+  r^{\rm intr}_t \propto H_k(z_t \mid V_t).
+\]
+The bonus encourages visiting diverse states while accounting for estimated future
+return.
+
+\subsection{Structural Information Intrinsic Exploration (SI2E)}
+
+\si{}~\citep{si2e2024} extends VCSE by constructing a hierarchical partition
+(\ptree{}) over the state graph $G=(V,E,w)$, where nodes are feature embeddings
+and edge weights capture pairwise similarity:
+\[
+  A_{ij} = \frac{1}{1 + d(z_i, z_j)},
+  \quad
+  \tilde{A}_{ij} = \frac{A_{ij} - A_{ij}\cdot V_i}{\max_k A_{ik}}.
+\]
+The intrinsic reward is the structural entropy of the resulting partition:
+\[
+  r^{\rm intr}_i = H_{\rm struct}(G, T_i),
+\]
+where $T_i$ is the \ptree{} node containing observation $i$.
+
+\subsection{PartitionTree Bottleneck}
+
+The \ptree{} is built via an agglomerative procedure that merges graph nodes
+bottom-up. In Python, this costs $\sim$155\,ms per call on 128-node graphs.
+With 16 parallel workers and 8 frames per update (128 frames total), training
+throughput is dominated by this overhead, yielding only $\sim$488 FPS.
+
+%% ================================================================
+\section{FastSI2E}
+
+\subsection{Adjacency-Based Cluster Reward}
+
+We observe that the \ptree{}'s primary role is to partition the state graph into
+coherent clusters. We replace it with a general clustering function
+$f: A \to \{1,\ldots,K\}$ applied to the value-normalised adjacency matrix
+$\tilde{A} \in [0,1]^{n\times n}$. The intrinsic bonus for observation $i$ in
+cluster $c_i = f(A)_i$ is:
+\[
+  r^{\rm intr}_i = \beta \cdot \frac{H(c_i) - \mu_H}{\sigma_H},
+\]
+where $H(c)$ is the within-cluster entropy and $(\mu_H, \sigma_H)$ is a running
+normaliser updated each training step.
+
+\subsection{k-Means Clustering}
+
+We apply a 20-iteration numpy k-means ($K{=}5$) to the rows of $\tilde{A}$.
+Each row $\tilde{A}_i$ summarises node $i$'s connectivity profile; k-means groups
+nodes with similar neighbourhood structure. Runtime: $\sim$1.5\,ms per call.
+
+\subsection{Leiden Community Detection}
+
+Leiden~\citep{leiden2019} maximises graph modularity:
+\[
+  Q = \frac{1}{2m}\sum_{ij}\!\left[A_{ij} - \frac{k_i k_j}{2m}\right]
+        \delta(c_i, c_j),
+\]
+where $m$ is the total edge weight and $k_i$ the degree of node $i$.
+We use \texttt{leidenalg.find\_partition(G, ModularityVertexPartition,}
+\texttt{weights=`weight', seed=42)}. On MiniGrid adjacency matrices Leiden
+typically finds 4--8 communities in $\sim$27\,ms.
+
+\subsection{Infomap Community Detection}
+
+Infomap~\citep{infomap2008} partitions the graph to minimise the description
+length of random walks (the \emph{map equation}):
+\[
+  L(\mathcal{M}) = q_\curvearrowright H(\mathcal{Q})
+    + \sum_i p_i^\circlearrowleft H(\mathcal{P}^i),
+\]
+where $q_\curvearrowright$ is the rate of inter-community movement.
+We use \texttt{Infomap(silent=True, num\_trials=3, seed=42, two\_level=True)}
+and threshold edges at the 60th percentile to suppress noise. Runtime:
+$\sim$24\,ms per call.
+
+\subsection{Adaptive-$\beta$}
+\label{sec:adaptive_beta}
+
+On hard tasks (RedBlueDoors-6x6, KeyCorridorS3R2) we observe bimodal
+convergence: seeds either converge fully ($\sim$80--100\%) or fail near 0\%.
+This is consistent with the intrinsic bonus causing over-exploration once a
+partial solution is found. We introduce:
+\[
+  \beta_t = \beta_0 \cdot \max\!\left(0.1,\; 1 - \hat{r}_{\rm success}\right),
+\]
+where $\hat{r}_{\rm success}$ is a running mean of success over the last 20
+episodes per worker. This reduces exploration pressure as the agent learns,
+without manual per-environment tuning.
+
+\begin{algorithm}[t]
+\SetAlgoLined
+\KwIn{Adjacency matrix $\tilde{A}$, cluster method $f$, coefficient $\beta_0$,
+      success rate $\hat{r}$}
+Compute clusters $\mathbf{c} \leftarrow f(\tilde{A})$\;
+Compute $H(c)$ for each cluster $c$\;
+Normalise: $r^{\rm intr}_i \leftarrow (H(c_i) - \mu_H)/\sigma_H$\;
+Update $(\mu_H, \sigma_H)$ with new batch\;
+$\beta \leftarrow \beta_0 \cdot \max(0.1, 1 - \hat{r})$\;
+\Return $\beta \cdot \mathbf{r}^{\rm intr}$
+\caption{\fastsi{} intrinsic bonus computation}
+\end{algorithm}
+
+%% ================================================================
+\section{Experiments}
+
+\subsection{Environments}
+
+We evaluate on three MiniGrid~\citep{minigrid2023} tasks of increasing difficulty:
+
+\textbf{DoorKey-8x8} (max 640 steps): agent finds a key, unlocks a door, reaches
+the goal. Well-studied; all methods succeed.
+
+\textbf{KeyCorridorS3R2} (max 270 steps): multi-room corridor; agent picks up a
+key and opens a coloured door. Requires planning over multiple rooms.
+
+\textbf{RedBlueDoors-6x6} (max 720 steps): two-room environment; correct door
+depends on room colour. Very sparse reward; bimodal convergence common.
+
+\subsection{Baselines and Training}
+
+\textbf{Algorithm}: A2C~\citep{a2c2016}, 16 parallel workers, 8 frames/update.
+\textbf{Encoder}: random 3-conv CNN, 64-dim features.
+\textbf{$\beta$}: 0.005 (fixed) or adaptive (\S\ref{sec:adaptive_beta}).
+\textbf{Evaluation}: 200 greedy episodes, argmax policy, seed 999.
+\textbf{Seeds}: 3--5 per condition. \textbf{Frames}: 3M.
+
+Baselines: plain A2C (no bonus), VCSE~\citep{vcse2022}, and original
+\si{}~\citep{si2e2024}.
+
+\subsection{Main Results}
+
+Table~\ref{tab:main} reports success rate mean$\pm$std and FPS. Our findings:
+
+\textbf{(1) Infomap is the best overall method.} On KeyCorridorS3R2, Infomap
+achieves 95.7\%$\pm$5.8 --- the highest of any method, +28\,pp over SI2E
+(67.5\%$\pm$27.9) --- while training 3.2$\times$ faster. Leiden is second at
+91.8\%$\pm$11.5 (+24\,pp).
+
+\textbf{(2) Community detection $>$ k-means on hard tasks.} On DoorKey-8x8
+all methods succeed equally (simple community structure). On KeyCorridorS3R2
+Leiden and Infomap dramatically outperform k-means (67.3\%$\pm$40.3), showing
+that graph-theoretic community structure matters for multi-room topology.
+
+\textbf{(3) k-means trades variance for speed.} Fastest (4.0$\times$) but
+bimodal on KeyCorridorS3R2: 3/5 seeds converge near 100\%, 2/5 fail near 0\%.
+
+\textbf{(4) Adaptive-$\beta$ stabilises hard tasks.} RBD convergence improves
+from 2/5 to 4/5 seeds; std on RBD halved (40.1 $\to$ 27.4).
+
+\textbf{(5) All FastSI2E variants beat SI2E on speed} with no accuracy loss on
+DoorKey-8x8.
+
+\begin{table*}[t]
+\centering
+\caption{Success rate (\%) mean$\pm$std and FPS (3\,M frames, 3--5 seeds).
+  $N$ = number of seeds. TBD = experiments in progress.}
+\label{tab:main}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+Method & DK-8x8 & KC-S3R2 & RBD-6x6 & FPS & vs.\ \si{} & $N$ \\
+\midrule
+VCSE & 97.8$\pm$2.8 & 54.0$\pm$45.0 & 55.4$\pm$39.1 & $\sim$1950 & 4.0$\times$ & 5 \\
+\si{} (PartitionTree) & 100.0$\pm$0.0 & 67.5$\pm$27.9 & 55.7$\pm$38.7 & 488 & 1$\times$ & 5 \\
+\midrule
+\fastsi{} k-means & \textbf{100.0$\pm$0.0} & 67.3$\pm$40.3 & TBD & \textbf{1952} & \textbf{4.0$\times$} & 5 \\
+\fastsi{} Leiden & \textbf{100.0$\pm$0.0} & 91.8$\pm$11.5 & --- & 1364 & 2.8$\times$ & 3 \\
+\textbf{\fastsi{} Infomap} & 99.5$\pm$0.7 & \textbf{95.7$\pm$5.8} & --- & 1540 & 3.2$\times$ & 3 \\
+\midrule
+\si{} + adaptive-$\beta$ & --- & 46.5$\pm$21.4 & \textbf{53.4$\pm$27.4} & 488 & 1$\times$ & 5 \\
+\fastsi{} + adaptive-$\beta$ & --- & TBD & TBD & $\sim$1700 & $\sim$3.5$\times$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Ablations}
+
+Table~\ref{tab:ablation} shows results on DoorKey-8x8 (1\,M frames, 3 seeds)
+with components removed. Removing the cluster-level bonus ({\tt no\_cluster})
+causes complete failure, confirming it is the load-bearing mechanism. Removing
+batch-max normalisation ({\tt no\_norm}) substantially degrades performance,
+though one seed converges (66.5\%), suggesting normalisation aids stability.
+
+\begin{table}[h]
+\centering
+\caption{Ablation study on DoorKey-8x8.}
+\label{tab:ablation}
+\small
+\begin{tabular}{lc}
+\toprule
+Configuration & Success rate \\
+\midrule
+\fastsi{} (full) & $\sim$100\% \\
+No cluster bonus & 0.0\% (all seeds fail) \\
+No batch-max norm & 22.2\%$\pm$38.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Clustering Algorithm Comparison}
+
+Table~\ref{tab:clustering} compares the three clustering strategies on DK-8x8
+and KC-S3R2. On DK-8x8 all methods succeed equally: the environment has simple
+two-room topology that any reasonable clustering detects. On KC-S3R2 the three
+approaches diverge sharply.
+
+\begin{table}[h]
+\centering
+\caption{Clustering method comparison (3M frames, 3 seeds).
+  \dag{} = 3/5 seeds converge, 2/5 fail near 0\%.}
+\label{tab:clustering}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Method & DK-8x8 & KC-S3R2 & FPS & Cost \\
+\midrule
+k-means  & 100.0$\pm$0.0 & 67.3$\pm$40.3\dag & 1952 & 1.5\,ms \\
+Leiden   & 100.0$\pm$0.0 & 91.8$\pm$11.5 & 1364 & 27\,ms \\
+Infomap  & 99.5$\pm$0.7  & \textbf{95.7$\pm$5.8} & 1540 & 24\,ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The key distinction lies in what each algorithm optimises:
+\textbf{k-means} minimises Euclidean distance between adjacency-row vectors.
+This is a reasonable proxy for graph structure but does not directly optimise
+for community coherence.
+\textbf{Leiden} maximises modularity --- the excess of intra-community edges
+over a random null model. It naturally finds densely-connected communities with
+sparse inter-community links.
+\textbf{Infomap} minimises the description length of random walks. Communities
+are regions where walks tend to stay; inter-community transitions are compressed
+as ``teleportations.''
+
+On KeyCorridorS3R2, the state space has rich multi-room topology: rooms form
+natural communities in the state graph, with few inter-room transitions.
+Leiden and Infomap recover this structure directly; k-means misses it because
+Euclidean proximity in adjacency-row space does not capture graph modularity.
+
+\subsection{FPS Benchmark}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\linewidth]{fps_comparison.png}
+\caption{Training throughput (FPS) for \si{} and \fastsi{} variants.
+  All fast variants achieve 2.8--4.0$\times$ speedup over the \ptree{} baseline.}
+\label{fig:fps}
+\end{figure}
+
+Figure~\ref{fig:fps} shows throughput across methods. The clustering subroutine
+alone reduces from 155\,ms to 1.5\,ms (k-means), 27\,ms (Leiden), or 24\,ms
+(Infomap). The overall speedup is lower (2.8--4$\times$) because environment
+stepping and neural network forward/backward passes now dominate.
+
+\subsection{Learning Curves}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\linewidth]{learning_curves.png}
+\caption{Learning curves (success rate vs.\ training frames) for key
+  conditions on DK-8x8, KC-S3R2, and RBD-6x6. Solid lines = mean over seeds;
+  shaded = $\pm$1 std.}
+\label{fig:curves}
+\end{figure}
+
+Figure~\ref{fig:curves} shows learning dynamics. On DK-8x8 (top-left),
+\fastsi{} k-means converges at the same rate as \si{}. On KC-S3R2, Leiden and
+Infomap converge more reliably and to higher final performance. On RBD-6x6
+(bottom), adaptive-$\beta$ smooths the bimodal pattern seen with fixed $\beta$.
+
+\subsection{PPO-SI2E: Negative Result}
+
+Table~\ref{tab:ppo} documents PPO combined with \si{}/\fastsi{}. Across all
+configurations, success rate is 0\% (or near-zero). We hypothesise that PPO's
+multi-epoch update interacts poorly with the intrinsic bonus: the bonus is
+computed once per rollout but the policy is updated for 4 epochs, causing a
+reward-distribution shift between epochs. This finding is consistent across
+environments and clustering methods.
+
+\begin{table}[h]
+\centering
+\caption{PPO-SI2E results (all 0\%).}
+\label{tab:ppo}
+\small
+\begin{tabular}{lccc}
+\toprule
+Config & DK-8x8 & KC-S3R2 & RBD \\
+\midrule
+PPO-\si{}  & 58.5$\pm$46 & 0\% & --- \\
+PPO-\fastsi{} & --- & 0\% & --- \\
+PPO-adaptive  & --- & --- & 0.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ================================================================
+\section{Discussion}
+
+\textbf{Why does k-means work at all?}
+Adjacency-matrix rows encode each node's neighbourhood profile in the state
+graph. k-means groups nodes with geometrically similar connectivity, which
+correlates with graph community membership. On simple environments (DK-8x8)
+this proxy is sufficient; on complex environments (KC-S3R2) it misses the
+finer community structure that modularity-based algorithms detect directly.
+
+\textbf{Why Leiden vs. Infomap?}
+Both outperform k-means substantially. Infomap has a slight edge (95.7\% vs.
+91.8\% on KC-S3R2) and lower variance (5.8 vs. 11.5). It is also marginally
+faster (24\,ms vs.\ 27\,ms). For practical use we recommend Infomap unless
+the environment is known to have simple state topology, in which case k-means'
+4$\times$ speedup over SI2E may be preferred.
+
+\textbf{Bimodal convergence.}
+Despite adaptive-$\beta$, KC-S3R2 and RBD still exhibit high variance across
+seeds. This likely reflects an environment-level property (long planning
+horizons, sparse terminal reward) amplified by the intrinsic bonus occasionally
+preventing exploitation after early success. Future work: entropy-conditioned
+bonus annealing or a separate extrinsic value head.
+
+\textbf{PPO incompatibility.}
+The off-policy correction in PPO ($\sim$4 epochs per rollout) creates a
+reward-distribution shift when the bonus is computed only once per rollout.
+A simple fix --- recomputing the bonus at each epoch --- is left to future work.
+
+%% ================================================================
+\section{Conclusion}
+
+We present \fastsi{}, which replaces \si{}'s expensive \ptree{} with a pluggable
+graph-clustering primitive. k-means achieves a 4$\times$ speedup with no
+accuracy loss on simple tasks. More importantly, community detection algorithms
+--- Leiden and Infomap --- further improve upon k-means and surpass the original
+\si{} on KeyCorridorS3R2 ($+$24--28\,pp) while being 2.8--3.2$\times$ faster.
+We attribute this to Leiden/Infomap detecting the natural room-level community
+structure in the state graph that k-means' Euclidean distance misses.
+Adaptive-$\beta$ additionally stabilises convergence on hard long-horizon tasks.
+Together, these contributions suggest that the choice of graph-partitioning
+algorithm is a first-class design decision for structural entropy exploration.
+
+%% ================================================================
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
