@@ -44,9 +44,9 @@ primitives and shows that \emph{the clustering algorithm choice matters beyond s
     on DoorKey-8x8 (100\%), but shows bimodal variance on harder tasks.
   \item \textbf{Leiden}~\citep{leiden2019} (27\,ms, \textbf{2.8$\times$ speedup}):
     matches k-means on simple tasks and substantially outperforms both on
-    KeyCorridorS3R2 (91.8\%$\pm$11.5 vs.\ SI2E 67.5\%$\pm$27.9).
+    KeyCorridorS3R2 (95.1\%$\pm$9.8 vs.\ SI2E 67.5\%$\pm$27.9).
   \item \textbf{Infomap}~\citep{infomap2008} (24\,ms, \textbf{3.2$\times$ speedup}):
-    best overall --- 95.7\%$\pm$5.8 on KeyCorridorS3R2, the highest of any method,
+    best overall --- 95.3\%$\pm$4.6 on KeyCorridorS3R2, the highest of any method,
     at 3.2$\times$ the training speed of the original.
   \item \textbf{Adaptive-$\beta$}: scales the intrinsic coefficient by
     $(1 - \hat{r}_{\rm success})$, raising RedBlueDoors convergence from
@@ -228,10 +228,10 @@ Baselines: plain A2C (no bonus), VCSE~\citep{vcse2022}, and original
 
 Table~\ref{tab:main} reports success rate mean$\pm$std and FPS. Our findings:
 
-\textbf{(1) Infomap is the best overall method.} On KeyCorridorS3R2, Infomap
-achieves 95.7\%$\pm$5.8 --- the highest of any method, +28\,pp over SI2E
-(67.5\%$\pm$27.9) --- while training 3.2$\times$ faster. Leiden is second at
-91.8\%$\pm$11.5 (+24\,pp).
+\textbf{(1) Community detection is the best overall approach.} On KeyCorridorS3R2,
+Infomap achieves 95.3\%$\pm$4.6 and Leiden achieves 95.1\%$\pm$9.8 --- both
++28\,pp over SI2E (67.5\%$\pm$27.9) --- while training 3.2$\times$ and 2.8$\times$
+faster respectively. Infomap has substantially lower variance (4.6 vs.\ 9.8).
 
 \textbf{(2) Community detection $>$ k-means on hard tasks.} On DoorKey-8x8
 all methods succeed equally (simple community structure). On KeyCorridorS3R2
@@ -251,6 +251,12 @@ below either component alone. We discuss this interaction in \S\ref{sec:discussi
 \textbf{(5) All FastSI2E variants beat SI2E on speed} with no accuracy loss on
 DoorKey-8x8.
 
+\textbf{(6) On RedBlueDoors-6x6, Infomap matches SI2E; Leiden underperforms.}
+Infomap achieves 54.4\%$\pm$38.5, closely matching original SI2E (55.7\%$\pm$38.7),
+while Leiden achieves only 27.5\%$\pm$38.9. The bimodal convergence pattern (seeds
+either succeed $\sim$80\% or fail near 0\%) persists across all methods, indicating
+it is an environment-level property rather than a clustering artefact.
+
 \begin{table*}[t]
 \centering
 \caption{Success rate (\%) mean$\pm$std and FPS (3\,M frames, 3--5 seeds per condition).}
@@ -264,8 +270,8 @@ VCSE & 97.8$\pm$2.8 & 54.0$\pm$45.0 & 55.4$\pm$39.1 & $\sim$1950 & 4.0$\times$ &
 \si{} (PartitionTree) & 100.0$\pm$0.0 & 67.5$\pm$27.9 & 55.7$\pm$38.7 & 488 & 1$\times$ & 5 \\
 \midrule
 \fastsi{} k-means & \textbf{100.0$\pm$0.0} & 67.3$\pm$40.3 & 50.4$\pm$36.1 & \textbf{1952} & \textbf{4.0$\times$} & 3--5 \\
-\fastsi{} Leiden & \textbf{100.0$\pm$0.0} & 91.8$\pm$11.5 & --- & 1364 & 2.8$\times$ & 3 \\
-\textbf{\fastsi{} Infomap} & 99.5$\pm$0.7 & \textbf{95.7$\pm$5.8} & --- & 1540 & 3.2$\times$ & 3 \\
+\fastsi{} Leiden & \textbf{100.0$\pm$0.0} & 95.1$\pm$9.8 & 27.5$\pm$38.9 & 1364 & 2.8$\times$ & 3--5 \\
+\textbf{\fastsi{} Infomap} & 99.5$\pm$0.7 & \textbf{95.3$\pm$4.6} & 54.4$\pm$38.5 & 1540 & 3.2$\times$ & 3--5 \\
 \midrule
 \si{} + adaptive-$\beta$ & --- & 46.5$\pm$21.4 & \textbf{53.4$\pm$27.4} & 488 & 1$\times$ & 5 \\
 \fastsi{} + adaptive-$\beta$ & --- & 28.6$\pm$23.6 & 30.0$\pm$36.5 & $\sim$1900 & $\sim$3.9$\times$ & 5 \\
@@ -306,17 +312,17 @@ approaches diverge sharply.
 
 \begin{table}[h]
 \centering
-\caption{Clustering method comparison (3M frames, 3 seeds).
+\caption{Clustering method comparison (3M frames, 3--5 seeds per method).
   \dag{} = 3/5 seeds converge, 2/5 fail near 0\%.}
 \label{tab:clustering}
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-Method & DK-8x8 & KC-S3R2 & FPS & Cost \\
+Method & DK-8x8 & KC-S3R2 & RBD-6x6 & FPS & Cost \\
 \midrule
-k-means  & 100.0$\pm$0.0 & 67.3$\pm$40.3\dag & 1952 & 1.5\,ms \\
-Leiden   & 100.0$\pm$0.0 & 91.8$\pm$11.5 & 1364 & 27\,ms \\
-Infomap  & 99.5$\pm$0.7  & \textbf{95.7$\pm$5.8} & 1540 & 24\,ms \\
+k-means  & 100.0$\pm$0.0 & 67.3$\pm$40.3\dag & 50.4$\pm$36.1 & 1952 & 1.5\,ms \\
+Leiden   & 100.0$\pm$0.0 & 95.1$\pm$9.8 & 27.5$\pm$38.9 & 1364 & 27\,ms \\
+Infomap  & 99.5$\pm$0.7  & \textbf{95.3$\pm$4.6} & \textbf{54.4$\pm$38.5} & 1540 & 24\,ms \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -404,11 +410,14 @@ this proxy is sufficient; on complex environments (KC-S3R2) it misses the
 finer community structure that modularity-based algorithms detect directly.
 
 \textbf{Why Leiden vs. Infomap?}
-Both outperform k-means substantially. Infomap has a slight edge (95.7\% vs.
-91.8\% on KC-S3R2) and lower variance (5.8 vs. 11.5). It is also marginally
-faster (24\,ms vs.\ 27\,ms). For practical use we recommend Infomap unless
-the environment is known to have simple state topology, in which case k-means'
-4$\times$ speedup over SI2E may be preferred.
+Both outperform k-means substantially on KC-S3R2 (95.3\%$\pm$4.6 and 95.1\%$\pm$9.8
+respectively, +28\,pp each over SI2E). On RBD-6x6, Infomap (54.4\%$\pm$38.5) closely
+matches original SI2E (55.7\%), while Leiden (27.5\%$\pm$38.9) underperforms ---
+likely because the RBD state graph is sparser and modularity optimisation finds less
+meaningful communities. Infomap is also marginally faster (24\,ms vs.\ 27\,ms).
+For practical use we recommend Infomap unless the environment is known to have
+simple state topology, in which case k-means' 4$\times$ speedup over SI2E may be
+preferred.
 
 \textbf{Why adaptive-$\beta$ hurts with k-means.}
 \label{sec:discussion}
@@ -420,8 +429,10 @@ stable across updates: a successful episode may not register in the cluster
 entropy signal, causing $\beta$ to oscillate and destabilise training. This
 suggests adaptive-$\beta$ should be paired with a semantically reliable
 clustering method (PartitionTree, or potentially Infomap/Leiden) rather than
-a speed-optimised proxy. We recommend using Infomap for any deployment that
-combines speed with stable adaptive scheduling.
+a speed-optimised proxy. However, even Infomap+adaptive-$\beta$ on RBD-6x6
+achieves only 25.2\%$\pm$35.7 --- below both Infomap alone (54.4\%) and
+k-means+adaptive-$\beta$ (30.0\%) --- indicating that the bimodal pattern on
+RBD is an environment-level property, not a clustering artefact.
 
 \textbf{Bimodal convergence.}
 Despite adaptive-$\beta$ with the original \si{}, KC-S3R2 and RBD still exhibit
@@ -441,7 +452,9 @@ We present \fastsi{}, which replaces \si{}'s expensive \ptree{} with a pluggable
 graph-clustering primitive. k-means achieves a 4$\times$ speedup with no
 accuracy loss on simple tasks. More importantly, community detection algorithms
 --- Leiden and Infomap --- further improve upon k-means and surpass the original
-\si{} on KeyCorridorS3R2 ($+$24--28\,pp) while being 2.8--3.2$\times$ faster.
+\si{} on KeyCorridorS3R2 ($+$28\,pp each) while being 2.8--3.2$\times$ faster.
+On RedBlueDoors-6x6 Infomap matches SI2E (54.4\% vs.\ 55.7\%) at 3.2$\times$
+the speed.
 We attribute this to Leiden/Infomap detecting the natural room-level community
 structure in the state graph that k-means' Euclidean distance misses.
 Adaptive-$\beta$ additionally stabilises convergence on hard long-horizon tasks.

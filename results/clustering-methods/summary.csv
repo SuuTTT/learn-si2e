@@ -20,3 +20,7 @@ leiden-si2e,MiniGrid-RedBlueDoors-6x6-v0,2,0.00,1491
 leiden-si2e,MiniGrid-RedBlueDoors-6x6-v0,3,0.00,1730
 infomap-si2e,MiniGrid-RedBlueDoors-6x6-v0,1,80.00,1536
 infomap-si2e,MiniGrid-RedBlueDoors-6x6-v0,2,0.00,1510
+infomap-si2e,MiniGrid-RedBlueDoors-6x6-v0,3,83.33,1847
+infomap-si2e-adaptive,MiniGrid-RedBlueDoors-6x6-v0,1,75.74,1504
+infomap-si2e-adaptive,MiniGrid-RedBlueDoors-6x6-v0,2,0.00,1509
+infomap-si2e-adaptive,MiniGrid-RedBlueDoors-6x6-v0,3,0.00,1811

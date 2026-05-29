@@ -10,9 +10,9 @@ We set out to beat the original SI2E (NeurIPS 2024) on both **accuracy** and **s
 | Axis | Status | Best result |
 |---|---|---|
 | Speed | ✅ | k-means: **4.0× faster** (488 → 1952 FPS) |
-| Accuracy (KC-S3R2) | ✅ | Infomap: **95.7%±5.8** vs SI2E 67.5%±27.9 (+28 pp) |
+| Accuracy (KC-S3R2) | ✅ | Infomap: **95.3%±4.6** (N=5) vs SI2E 67.5%±27.9 (+28 pp) |
 | Accuracy (DK-8x8) | ✅ | All methods match SI2E 100% |
-| Accuracy (RBD-6x6) | ⚠️ | Adaptive-β original SI2E best: 53.4%±27.4 (SI2E was 55.7%) |
+| Accuracy (RBD-6x6) | ⚠️ | Infomap 54.4%±38.5 ≈ SI2E 55.7%; Leiden 27.5%±38.9 underperforms |
 | Paper | ✅ | `paper/main.pdf` — 5 pages, fully compiled |
 
 **Core story:** Replace the PartitionTree with graph community detection → simultaneously faster AND more accurate. Leiden/Infomap detect the multi-room topology that k-means' Euclidean distance misses.
@@ -52,8 +52,8 @@ We set out to beat the original SI2E (NeurIPS 2024) on both **accuracy** and **s
 |--------|---|------|-----|---------|
 | SI2E | 5 | 67.5% | 27.9 | — |
 | FastSI2E k-means | 5 | 67.3% | 40.3 | −0.2 pp |
-| **FastSI2E Leiden** | 3 | **91.8%** | **11.5** | **+24.3 pp** |
-| **FastSI2E Infomap** | 3 | **95.7%** | **5.8** | **+28.2 pp** |
+| **FastSI2E Leiden** | **5** | **95.1%** | **9.8** | **+27.6 pp** |
+| **FastSI2E Infomap** | **5** | **95.3%** | **4.6** | **+27.8 pp** |
 
 Why: KC-S3R2 has multi-room topology. Leiden/Infomap find room-level communities directly via modularity/random-walk compression. k-means' Euclidean distance misses this structure.
 
@@ -107,6 +107,29 @@ Hypothesis: PPO's 4-epoch update creates reward-distribution shift with the once
 
 ---
 
+### M7 — Phase 3: RBD Clustering + 5-Seed KC ✅ DONE
+
+#### (A) KC-S3R2 Leiden s4,s5 ✅
+- s4: 100%, s5: 100% → N=5 full: **95.1%±9.8** (+28 pp vs SI2E)
+
+#### (B) KC-S3R2 Infomap s4,s5 ✅
+- s4: 93.0%, s5: 96.5% → N=5 full: **95.3%±4.6** (+28 pp vs SI2E, all 5 seeds converge)
+
+#### (C) RBD-6x6 Leiden s1–3 ✅
+- s1: 82.5%, s2: 0%, s3: 0% → **27.5%±38.9**
+- Bimodal: 1/3 seeds converge; Leiden underperforms on RBD
+
+#### (D) RBD-6x6 Infomap s1–3 ✅
+- s1: 80%, s2: 0%, s3: 83.3% → **54.4%±38.5**
+- Matches SI2E (55.7%); bimodal pattern persists (2/3 converge)
+
+#### (E) RBD-6x6 Infomap+adaptive-β s1–3 ✅ — NEGATIVE
+- s1: 75.7%, s2: 0%, s3: 0% → **25.2%±35.7**
+- Below Infomap alone (54.4%) and k-means+adaptive (30.0%)
+- Confirms bimodal RBD convergence is environment-level, not cluster-method-level
+
+---
+
 ## Full Results Table
 
 | Method | DK-8x8 | KC-S3R2 | RBD-6x6 | FPS |
@@ -114,8 +137,8 @@ Hypothesis: PPO's 4-epoch update creates reward-distribution shift with the once
 | VCSE (orig.) | 97.8±2.8 | 54.0±45.0 | 55.4±39.1 | ~1950 |
 | SI2E (orig.) | 100.0±0.0 | 67.5±27.9 | 55.7±38.7 | 488 |
 | FastSI2E k-means | **100.0±0.0** | 67.3±40.3 | 50.4±36.1 | **1952** |
-| FastSI2E Leiden | **100.0±0.0** | 91.8±11.5 | — | 1364 |
-| **FastSI2E Infomap** | 99.5±0.7 | **95.7±5.8** | — | 1540 |
+| FastSI2E Leiden | **100.0±0.0** | 95.1±9.8 | 27.5±38.9 | 1364 |
+| **FastSI2E Infomap** | 99.5±0.7 | **95.3±4.6** | 54.4±38.5 | 1540 |
 | SI2E + adaptive-β | — | 46.5±21.4 | **53.4±27.4** | 488 |
 | FastSI2E + adaptive-β | — | 28.6±23.6 ⚠️ | 30.0±36.5 ⚠️ | ~1900 |
 
@@ -149,17 +172,17 @@ Hypothesis: PPO's 4-epoch update creates reward-distribution shift with the once
 
 | # | Task | Why important | Est. time | Status |
 |---|------|---------------|-----------|--------|
-| 1 | **Leiden + Infomap on RBD** (s1–3) | Paper Table 1 shows "---" for RBD Leiden/Infomap; need to know if community detection helps on RBD too | ~2h | not started |
-| 2 | **Extend KC-S3R2 Leiden + Infomap to 5 seeds** | Currently N=3; variance is large (11.5, 5.8); N=5 would be more credible for paper | ~2h | 3 seeds done |
-| 3 | **Adaptive-β + Infomap/Leiden on RBD** | If community detection fixes adaptive-β incompatibility, it's a strong finding | ~3h | not started |
+| 1 | **Leiden + Infomap on RBD** (s1–3) | Paper Table 1 shows "---" for RBD Leiden/Infomap; need to know if community detection helps on RBD too | ~2h | ✅ DONE |
+| 2 | **Extend KC-S3R2 Leiden + Infomap to 5 seeds** | Currently N=3; variance is large (11.5, 5.8); N=5 would be more credible for paper | ~2h | ✅ DONE |
+| 3 | **Adaptive-β + Infomap/Leiden on RBD** | If community detection fixes adaptive-β incompatibility, it's a strong finding | ~3h | ✅ DONE (negative) |
 
 ### MEDIUM PRIORITY — Figures and analysis
 
 | # | Task | Why | Est. time | Status |
 |---|------|-----|-----------|--------|
-| 4 | Re-run `python3 analyze_results.py --plot` after HIGH tasks done | Learning curves panel for KC needs all 3 clustering methods (currently k-means only) | 5 min | blocked on #1-2 |
-| 5 | Run `python3 benchmark_fps.py --steps 5` | Get clean single-seed FPS (current FPS from training logs, noisy due to concurrent seeds) | 15 min | not started |
-| 6 | Add KC-S3R2 Leiden/Infomap to learning curves figure | Currently only k-means on KC panel | 30 min | blocked on #2 |
+| 4 | Re-run `python3 analyze_results.py --plot` after HIGH tasks done | Learning curves panel for KC needs all 3 clustering methods (currently k-means only) | 5 min | ✅ DONE |
+| 5 | Run `python3 benchmark_fps.py --steps 5` | Get clean single-seed FPS (current FPS from training logs, noisy due to concurrent seeds) | 15 min | ✅ DONE |
+| 6 | Add KC-S3R2 Leiden/Infomap to learning curves figure | Currently only k-means on KC panel | 30 min | ✅ DONE |
 
 ### LOW PRIORITY — Nice to have
 
@@ -172,11 +195,11 @@ Hypothesis: PPO's 4-epoch update creates reward-distribution shift with the once
 
 | # | Section | Task |
 |---|---------|------|
-| W1 | §4.4 Table 1 | Fill RBD column for Leiden/Infomap once task #1 done |
-| W2 | §4.6 Clustering comparison | Update Table 3 with 5-seed KC data (task #2) |
-| W3 | §4.3 Key findings | Add finding about whether adaptive-β works with Leiden/Infomap (task #3) |
-| W4 | §5 Discussion | Strengthen the "why community detection wins on multi-room tasks" argument with RBD data |
-| W5 | §6 Conclusion | Final pass once all results are in |
+| W1 | §4.4 Table 1 | Fill RBD column for Leiden/Infomap once task #1 done | ✅ DONE |
+| W2 | §4.6 Clustering comparison | Update Table 3 with 5-seed KC data (task #2) | ✅ DONE |
+| W3 | §4.3 Key findings | Add finding about whether adaptive-β works with Leiden/Infomap (task #3) | ✅ DONE |
+| W4 | §5 Discussion | Strengthen the "why community detection wins on multi-room tasks" argument with RBD data | ✅ DONE |
+| W5 | §6 Conclusion | Final pass once all results are in | ✅ DONE |
 
 ---
 
